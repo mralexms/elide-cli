@@ -14,14 +14,18 @@ def list_exercises(
     show_timestamp: bool = typer.Option(
         False, "--show-timestamp", help="Also show when you last submitted each exercise"
     ),
+    pending: bool = typer.Option(False, "--pending", help="Only show exercises you haven't submitted yet"),
 ) -> None:
-    """List available exercises."""
+    """List available exercises, ordered alphabetically by slug."""
     client = require_classroom_client()
     try:
         exercises = client.list_exercises()
     except ApiError as e:
         typer.secho(str(e), fg=typer.colors.RED)
         raise typer.Exit(code=1)
+
+    if pending:
+        exercises = [ex for ex in exercises if ex.get("status", "pending") == "pending"]
 
     if not exercises:
         typer.echo("No exercises available.")

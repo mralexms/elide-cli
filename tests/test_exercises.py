@@ -62,3 +62,17 @@ def test_list_shows_timestamp_with_flag(logged_in_with_classroom, mock_exercises
     assert result.exit_code == 0
     assert "last submitted: 2026-07-21T15:26:27.257941Z" in result.output
     assert "last submitted: -" in result.output
+
+
+def test_list_pending_flag_only_shows_unattempted_exercises(logged_in_with_classroom, mock_exercises):
+    result = runner.invoke(app, ["exercises", "list", "--pending"])
+    assert result.exit_code == 0
+    assert "sum-two-numbers" in result.output
+    assert "hello-world" not in result.output
+
+
+def test_list_pending_flag_with_no_pending_exercises(logged_in_with_classroom, monkeypatch):
+    monkeypatch.setattr(ApiClient, "list_exercises", lambda self: [FAKE_EXERCISES[0]])
+    result = runner.invoke(app, ["exercises", "list", "--pending"])
+    assert result.exit_code == 0
+    assert "No exercises available." in result.output
