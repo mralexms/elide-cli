@@ -30,6 +30,15 @@ classrooms_app.command("list")(classrooms.list_classrooms)
 app.add_typer(classrooms_app, name="classrooms")
 
 exercises_app = typer.Typer(help="Browse exercises")
+
+
+@exercises_app.callback(invoke_without_command=True)
+def exercises_callback(ctx: typer.Context) -> None:
+    if ctx.invoked_subcommand is None:
+        exercises.list_exercises(show_timestamp=False, unsolved=False)
+        raise typer.Exit()
+
+
 exercises_app.command("list")(exercises.list_exercises)
 exercises_app.command("show")(exercises.show_exercise)
 app.add_typer(exercises_app, name="exercises")

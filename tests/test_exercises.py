@@ -58,6 +58,13 @@ def test_list_shows_status_for_each_exercise(logged_in_with_classroom, mock_exer
     assert "pending" in result.output
 
 
+def test_exercises_bare_invocation_matches_list(logged_in_with_classroom, mock_exercises):
+    bare = runner.invoke(app, ["exercises"])
+    full = runner.invoke(app, ["exercises", "list"])
+    assert bare.exit_code == 0
+    assert bare.output == full.output
+
+
 def test_list_hides_timestamp_by_default(logged_in_with_classroom, mock_exercises):
     result = runner.invoke(app, ["exercises", "list"])
     assert result.exit_code == 0
