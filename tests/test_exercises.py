@@ -21,6 +21,13 @@ FAKE_EXERCISES = [
         "status": "pending",
         "last_submission_at": None,
     },
+    {
+        "slug": "broken-attempt",
+        "title": "Broken Attempt",
+        "difficulty": "easy",
+        "status": "failure",
+        "last_submission_at": "2026-07-21T16:00:00.000000Z",
+    },
 ]
 
 
@@ -64,15 +71,16 @@ def test_list_shows_timestamp_with_flag(logged_in_with_classroom, mock_exercises
     assert "last submitted: -" in result.output
 
 
-def test_list_pending_flag_only_shows_unattempted_exercises(logged_in_with_classroom, mock_exercises):
-    result = runner.invoke(app, ["exercises", "list", "--pending"])
+def test_list_unsolved_flag_shows_pending_and_failed_but_not_success(logged_in_with_classroom, mock_exercises):
+    result = runner.invoke(app, ["exercises", "list", "--unsolved"])
     assert result.exit_code == 0
     assert "sum-two-numbers" in result.output
+    assert "broken-attempt" in result.output
     assert "hello-world" not in result.output
 
 
-def test_list_pending_flag_with_no_pending_exercises(logged_in_with_classroom, monkeypatch):
+def test_list_unsolved_flag_with_nothing_unsolved(logged_in_with_classroom, monkeypatch):
     monkeypatch.setattr(ApiClient, "list_exercises", lambda self: [FAKE_EXERCISES[0]])
-    result = runner.invoke(app, ["exercises", "list", "--pending"])
+    result = runner.invoke(app, ["exercises", "list", "--unsolved"])
     assert result.exit_code == 0
     assert "No exercises available." in result.output

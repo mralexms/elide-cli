@@ -14,7 +14,9 @@ def list_exercises(
     show_timestamp: bool = typer.Option(
         False, "--show-timestamp", help="Also show when you last submitted each exercise"
     ),
-    pending: bool = typer.Option(False, "--pending", help="Only show exercises you haven't submitted yet"),
+    unsolved: bool = typer.Option(
+        False, "--unsolved", help="Only show exercises you haven't passed yet (never submitted or failing)"
+    ),
 ) -> None:
     """List available exercises, ordered alphabetically by slug."""
     client = require_classroom_client()
@@ -24,8 +26,8 @@ def list_exercises(
         typer.secho(str(e), fg=typer.colors.RED)
         raise typer.Exit(code=1)
 
-    if pending:
-        exercises = [ex for ex in exercises if ex.get("status", "pending") == "pending"]
+    if unsolved:
+        exercises = [ex for ex in exercises if ex.get("status", "pending") != "success"]
 
     if not exercises:
         typer.echo("No exercises available.")
