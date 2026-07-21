@@ -66,3 +66,13 @@ def clear_active_classroom() -> None:
     data = load_config()
     data.pop("active_classroom", None)
     save_config(data)
+
+
+def get_last_version_check() -> float | None:
+    return load_config().get("last_version_check")
+
+
+def set_last_version_check(timestamp: float) -> None:
+    data = load_config()
+    data["last_version_check"] = timestamp
+    save_config(data)

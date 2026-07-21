@@ -64,3 +64,6 @@ class ApiClient:
 
     def list_classrooms(self) -> list[dict]:
         return self._request("GET", "/api/classrooms/").json()
+
+    def get_latest_release(self) -> dict:
+        return self._request("GET", "/api/cli/latest/").json()

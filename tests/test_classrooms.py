@@ -1,7 +1,6 @@
 import pytest
 from typer.testing import CliRunner
 
-from eliude_cli import config
 from eliude_cli.client import ApiClient
 from eliude_cli.main import app
 
@@ -11,14 +10,6 @@ FAKE_CLASSROOMS = [
     {"id": 1, "name": "Turma A", "slug": "turma-a"},
     {"id": 2, "name": "Turma B", "slug": "turma-b"},
 ]
-
-
-@pytest.fixture
-def cli_config(tmp_path, monkeypatch):
-    config_dir = tmp_path / ".eliude"
-    monkeypatch.setattr(config, "CONFIG_DIR", config_dir)
-    monkeypatch.setattr(config, "CONFIG_FILE", config_dir / "config.json")
-    return config
 
 
 @pytest.fixture

@@ -1,12 +1,21 @@
 import typer
 
-from .commands import classrooms, config_cmd, exercises, login, submissions, submit
+from .commands import classrooms, config_cmd, exercises, login, submissions, submit, update
+from .version_check import maybe_warn_outdated
 
 app = typer.Typer(name="eliude", help="CLI for the Eliude C programming judge")
+
+
+@app.callback()
+def main_callback() -> None:
+    maybe_warn_outdated()
+
+
 app.command(name="login")(login.login)
 app.command(name="logout")(login.logout)
 app.command(name="submit")(submit.submit)
 app.command(name="switch")(classrooms.switch)
+app.command(name="update")(update.update)
 
 classrooms_app = typer.Typer(help="Manage your classrooms")
 classrooms_app.command("list")(classrooms.list_classrooms)
