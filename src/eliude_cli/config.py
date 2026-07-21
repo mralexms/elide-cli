@@ -32,6 +32,10 @@ def get_token() -> str | None:
     return load_config().get("token")
 
 
+def get_username() -> str | None:
+    return load_config().get("username")
+
+
 def set_token(token: str, username: str) -> None:
     data = load_config()
     data["token"] = token

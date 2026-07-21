@@ -1,7 +1,7 @@
 import typer
 
 from . import __version__
-from .commands import classrooms, config_cmd, exercises, get, login, submissions, submit, update
+from .commands import classrooms, config_cmd, exercises, get, login, status, submissions, submit, update
 from .version_check import maybe_warn_outdated
 
 app = typer.Typer(name="eliude", help="CLI for the Eliude C programming judge")
@@ -22,6 +22,7 @@ app.command(name="submit")(submit.submit)
 app.command(name="switch")(classrooms.switch)
 app.command(name="update")(update.update)
 app.command(name="get")(get.get)
+app.command(name="status")(status.status)
 
 classrooms_app = typer.Typer(help="Manage your classrooms")
 classrooms_app.command("list")(classrooms.list_classrooms)
