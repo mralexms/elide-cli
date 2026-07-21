@@ -1,14 +1,19 @@
 import typer
 
+from . import __version__
 from .commands import classrooms, config_cmd, exercises, login, submissions, submit, update
 from .version_check import maybe_warn_outdated
 
 app = typer.Typer(name="eliude", help="CLI for the Eliude C programming judge")
 
 
-@app.callback()
-def main_callback() -> None:
+@app.callback(invoke_without_command=True)
+def main_callback(ctx: typer.Context) -> None:
     maybe_warn_outdated()
+    if ctx.invoked_subcommand is None:
+        typer.echo(f"eliude {__version__}")
+        typer.echo(ctx.get_help())
+        raise typer.Exit()
 
 
 app.command(name="login")(login.login)
