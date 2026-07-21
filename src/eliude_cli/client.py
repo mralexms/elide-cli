@@ -62,6 +62,9 @@ class ApiClient:
     def get_submission(self, submission_id: int) -> dict:
         return self._request("GET", f"/api/submissions/{submission_id}/").json()
 
+    def get_latest_submission(self, slug: str) -> dict:
+        return self._request("GET", f"/api/submissions/latest/{slug}/").json()
+
     def list_classrooms(self) -> list[dict]:
         return self._request("GET", "/api/classrooms/").json()
 
