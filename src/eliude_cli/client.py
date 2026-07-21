@@ -6,11 +6,13 @@ class ApiError(Exception):
 
 
 class ApiClient:
-    def __init__(self, base_url: str, token: str | None = None):
+    def __init__(self, base_url: str, token: str | None = None, classroom: str | None = None):
         self.base_url = base_url.rstrip("/")
         self.session = requests.Session()
         if token:
             self.session.headers["Authorization"] = f"Token {token}"
+        if classroom:
+            self.session.headers["X-Eliude-Classroom"] = classroom
 
     def _request(self, method: str, path: str, **kwargs):
         url = f"{self.base_url}{path}"
@@ -23,12 +25,10 @@ class ApiClient:
 
         if response.status_code == 401:
             raise ApiError("Not logged in or token expired. Run `eliude login`.")
-        if response.status_code == 403:
-            raise ApiError("You don't have permission to do that.")
+        if response.status_code in (400, 403):
+            raise ApiError(self._format_validation_errors(response))
         if response.status_code == 404:
             raise ApiError("Not found.")
-        if response.status_code == 400:
-            raise ApiError(self._format_validation_errors(response))
         response.raise_for_status()
         return response
 
@@ -39,6 +39,8 @@ class ApiClient:
         except ValueError:
             return response.text
         if isinstance(body, dict):
+            if set(body.keys()) == {"detail"}:
+                return str(body["detail"])
             parts = [f"{field}: {', '.join(msgs) if isinstance(msgs, list) else msgs}" for field, msgs in body.items()]
             return "; ".join(parts)
         return str(body)
@@ -59,3 +61,6 @@ class ApiClient:
 
     def get_submission(self, submission_id: int) -> dict:
         return self._request("GET", f"/api/submissions/{submission_id}/").json()
+
+    def list_classrooms(self) -> list[dict]:
+        return self._request("GET", "/api/classrooms/").json()

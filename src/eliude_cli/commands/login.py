@@ -17,10 +17,12 @@ def login(
         typer.secho(str(e), fg=typer.colors.RED)
         raise typer.Exit(code=1)
     config.set_token(token, username)
+    config.clear_active_classroom()
     typer.secho(f"Logged in as {username}.", fg=typer.colors.GREEN)
 
 
 def logout() -> None:
     """Clear the locally stored auth token."""
     config.clear_token()
+    config.clear_active_classroom()
     typer.echo("Logged out.")

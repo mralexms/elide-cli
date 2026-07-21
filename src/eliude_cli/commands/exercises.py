@@ -1,12 +1,12 @@
 import typer
 
 from ..client import ApiError
-from ..session import require_client
+from ..session import require_classroom_client
 
 
 def list_exercises() -> None:
     """List available exercises."""
-    client = require_client()
+    client = require_classroom_client()
     try:
         exercises = client.list_exercises()
     except ApiError as e:
@@ -23,7 +23,7 @@ def list_exercises() -> None:
 
 def show_exercise(slug: str) -> None:
     """Show an exercise's statement and sample test cases."""
-    client = require_client()
+    client = require_classroom_client()
     try:
         exercise = client.get_exercise(slug)
     except ApiError as e:

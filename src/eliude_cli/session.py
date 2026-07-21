@@ -9,7 +9,15 @@ def require_client() -> ApiClient:
     if not token:
         typer.secho("Not logged in. Run `eliude login` first.", fg=typer.colors.RED)
         raise typer.Exit(code=1)
-    return ApiClient(config.get_base_url(), token=token)
+    return ApiClient(config.get_base_url(), token=token, classroom=config.get_active_classroom())
+
+
+def require_classroom_client() -> ApiClient:
+    client = require_client()
+    if not config.get_active_classroom():
+        typer.secho("No active classroom set. Run `eliude switch` first.", fg=typer.colors.RED)
+        raise typer.Exit(code=1)
+    return client
 
 
 def anonymous_client() -> ApiClient:

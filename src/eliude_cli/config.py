@@ -50,3 +50,19 @@ def clear_token() -> None:
     data.pop("token", None)
     data.pop("username", None)
     save_config(data)
+
+
+def get_active_classroom() -> str | None:
+    return load_config().get("active_classroom")
+
+
+def set_active_classroom(slug: str) -> None:
+    data = load_config()
+    data["active_classroom"] = slug
+    save_config(data)
+
+
+def clear_active_classroom() -> None:
+    data = load_config()
+    data.pop("active_classroom", None)
+    save_config(data)

@@ -1,11 +1,12 @@
 import typer
 
-from .commands import config_cmd, exercises, login, submissions, submit
+from .commands import classrooms, config_cmd, exercises, login, submissions, submit
 
 app = typer.Typer(name="eliude", help="CLI for the Eliude C programming judge")
 app.command(name="login")(login.login)
 app.command(name="logout")(login.logout)
 app.command(name="submit")(submit.submit)
+app.command(name="switch")(classrooms.switch)
 
 exercises_app = typer.Typer(help="Browse exercises")
 exercises_app.command("list")(exercises.list_exercises)
