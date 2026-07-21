@@ -14,9 +14,11 @@ def _print_stats(exercises: list[dict], indent: str = "") -> None:
     total = len(exercises)
     passed = sum(1 for ex in exercises if ex.get("status") == "success")
     failed = sum(1 for ex in exercises if ex.get("status") == "failure")
+    score = (passed / total * 100) if total else 0.0
     typer.echo(f"{indent}Exercises: {total}")
     typer.secho(f"{indent}Passed: {passed}", fg=typer.colors.GREEN)
     typer.secho(f"{indent}Failed: {failed}", fg=typer.colors.RED)
+    typer.echo(f"{indent}Score: {score:.1f}% ({passed}/{total})")
 
 
 def status(

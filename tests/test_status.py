@@ -61,6 +61,7 @@ def test_status_shows_login_classroom_and_counts(logged_in_with_classroom, mock_
     assert "Exercises: 3" in result.output
     assert "Passed: 1" in result.output
     assert "Failed: 1" in result.output
+    assert "Score: 33.3% (1/3)" in result.output
 
 
 def test_status_all_shows_every_classroom(logged_in_with_classroom, mock_backend):
@@ -70,3 +71,5 @@ def test_status_all_shows_every_classroom(logged_in_with_classroom, mock_backend
     assert "  Turma B (turma-b)" in result.output
     assert "Exercises: 3" in result.output
     assert "Exercises: 1" in result.output
+    assert "Score: 33.3% (1/3)" in result.output
+    assert "Score: 100.0% (1/1)" in result.output
