@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import typer
 
 from ..client import ApiError
@@ -43,7 +45,12 @@ def list_exercises(
         typer.echo(line)
 
 
-def show_exercise(slug: str) -> None:
+def show_exercise(
+    slug: str,
+    download: bool = typer.Option(
+        False, "--download", help="Also save the first sample test case as <slug>_input.txt / <slug>_output.txt"
+    ),
+) -> None:
     """Show an exercise's statement and sample test cases."""
     client = require_classroom_client()
     try:
@@ -65,3 +72,14 @@ def show_exercise(slug: str) -> None:
         for tc in samples:
             typer.echo(f"  Input:    {tc['stdin_data']!r}")
             typer.echo(f"  Expected: {tc['expected_stdout']!r}")
+
+    if download:
+        if not samples:
+            typer.secho("No sample test case available to download.", fg=typer.colors.YELLOW)
+            return
+        sample = samples[0]
+        input_path = Path(f"{slug}_input.txt")
+        output_path = Path(f"{slug}_output.txt")
+        input_path.write_text(sample["stdin_data"])
+        output_path.write_text(sample["expected_stdout"])
+        typer.secho(f"Saved sample test case to {input_path} and {output_path}.", fg=typer.colors.GREEN)

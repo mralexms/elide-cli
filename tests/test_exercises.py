@@ -84,3 +84,52 @@ def test_list_unsolved_flag_with_nothing_unsolved(logged_in_with_classroom, monk
     result = runner.invoke(app, ["exercises", "list", "--unsolved"])
     assert result.exit_code == 0
     assert "No exercises available." in result.output
+
+
+FAKE_EXERCISE_DETAIL = {
+    "title": "Hello World",
+    "difficulty": "easy",
+    "time_limit_seconds": 5,
+    "memory_limit_mb": 64,
+    "statement": "Say hello.",
+    "sample_test_cases": [
+        {"id": 1, "stdin_data": "World\n", "expected_stdout": "Hello, World!\n", "order": 1},
+    ],
+}
+
+FAKE_EXERCISE_DETAIL_NO_SAMPLES = {**FAKE_EXERCISE_DETAIL, "sample_test_cases": []}
+
+
+@pytest.fixture
+def mock_exercise_detail(monkeypatch):
+    monkeypatch.setattr(ApiClient, "get_exercise", lambda self, slug: FAKE_EXERCISE_DETAIL)
+
+
+def test_show_requires_login(cli_config):
+    result = runner.invoke(app, ["exercises", "show", "hello-world"])
+    assert result.exit_code == 1
+    assert "Not logged in" in result.output
+
+
+def test_show_without_download_does_not_write_files(logged_in_with_classroom, mock_exercise_detail, tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    result = runner.invoke(app, ["exercises", "show", "hello-world"])
+    assert result.exit_code == 0
+    assert not (tmp_path / "hello-world_input.txt").exists()
+
+
+def test_show_download_saves_first_sample_test_case(logged_in_with_classroom, mock_exercise_detail, tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    result = runner.invoke(app, ["exercises", "show", "hello-world", "--download"])
+    assert result.exit_code == 0
+    assert (tmp_path / "hello-world_input.txt").read_text() == "World\n"
+    assert (tmp_path / "hello-world_output.txt").read_text() == "Hello, World!\n"
+
+
+def test_show_download_with_no_sample_test_cases(logged_in_with_classroom, monkeypatch, tmp_path):
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(ApiClient, "get_exercise", lambda self, slug: FAKE_EXERCISE_DETAIL_NO_SAMPLES)
+    result = runner.invoke(app, ["exercises", "show", "hello-world", "--download"])
+    assert result.exit_code == 0
+    assert "No sample test case available" in result.output
+    assert not (tmp_path / "hello-world_input.txt").exists()
