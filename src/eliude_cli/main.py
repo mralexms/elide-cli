@@ -8,6 +8,10 @@ app.command(name="logout")(login.logout)
 app.command(name="submit")(submit.submit)
 app.command(name="switch")(classrooms.switch)
 
+classrooms_app = typer.Typer(help="Manage your classrooms")
+classrooms_app.command("list")(classrooms.list_classrooms)
+app.add_typer(classrooms_app, name="classrooms")
+
 exercises_app = typer.Typer(help="Browse exercises")
 exercises_app.command("list")(exercises.list_exercises)
 exercises_app.command("show")(exercises.show_exercise)
