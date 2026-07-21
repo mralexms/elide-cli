@@ -3,8 +3,18 @@ import typer
 from ..client import ApiError
 from ..session import require_classroom_client
 
+_STATUS_COLORS = {
+    "success": typer.colors.GREEN,
+    "failure": typer.colors.RED,
+    "pending": typer.colors.YELLOW,
+}
 
-def list_exercises() -> None:
+
+def list_exercises(
+    show_timestamp: bool = typer.Option(
+        False, "--show-timestamp", help="Also show when you last submitted each exercise"
+    ),
+) -> None:
     """List available exercises."""
     client = require_classroom_client()
     try:
@@ -18,7 +28,13 @@ def list_exercises() -> None:
         return
 
     for ex in exercises:
-        typer.echo(f"{ex['slug']:<30} [{ex['difficulty']:<6}] {ex['title']}")
+        status = ex.get("status", "pending")
+        status_label = typer.style(f"{status:<8}", fg=_STATUS_COLORS.get(status))
+        line = f"{ex['slug']:<30} [{ex['difficulty']:<6}] {status_label} {ex['title']}"
+        if show_timestamp:
+            timestamp = ex.get("last_submission_at") or "-"
+            line += f"  (last submitted: {timestamp})"
+        typer.echo(line)
 
 
 def show_exercise(slug: str) -> None:
