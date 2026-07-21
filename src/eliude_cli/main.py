@@ -23,6 +23,7 @@ app.command(name="switch")(classrooms.switch)
 app.command(name="update")(update.update)
 app.command(name="get")(get.get)
 app.command(name="status")(status.status)
+app.command(name="show")(exercises.show_exercise)
 
 classrooms_app = typer.Typer(help="Manage your classrooms")
 classrooms_app.command("list")(classrooms.list_classrooms)

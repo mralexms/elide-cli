@@ -111,6 +111,13 @@ def test_show_requires_login(cli_config):
     assert "Not logged in" in result.output
 
 
+def test_show_shortcut_matches_exercises_show(logged_in_with_classroom, mock_exercise_detail):
+    shortcut = runner.invoke(app, ["show", "hello-world"])
+    full = runner.invoke(app, ["exercises", "show", "hello-world"])
+    assert shortcut.exit_code == 0
+    assert shortcut.output == full.output
+
+
 def test_show_without_download_does_not_write_files(logged_in_with_classroom, mock_exercise_detail, tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     result = runner.invoke(app, ["exercises", "show", "hello-world"])
