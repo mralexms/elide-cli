@@ -19,7 +19,7 @@ def _fetch_classrooms() -> list[dict]:
 def _print_classrooms(classrooms: list[dict]) -> None:
     if not classrooms:
         typer.echo("You are not enrolled in any classrooms yet.")
-        return
+        raise typer.Exit(code=1)
     current = config.get_active_classroom()
     for c in classrooms:
         marker = "*" if c["slug"] == current else " "
@@ -34,10 +34,6 @@ def list_classrooms() -> None:
 def switch(slug: Optional[str] = typer.Argument(None, help="Classroom slug to switch to")) -> None:
     """Switch the active classroom, or list the classrooms you belong to."""
     classrooms = _fetch_classrooms()
-
-    if not classrooms:
-        typer.echo("You are not enrolled in any classrooms yet.")
-        raise typer.Exit(code=1)
 
     if slug is None:
         _print_classrooms(classrooms)
