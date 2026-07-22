@@ -1,7 +1,7 @@
 import typer
 
 from .. import config
-from ..client import ApiError
+from ..client import ApiClient, ApiError
 from ..session import anonymous_client
 
 
@@ -23,6 +23,12 @@ def login(
 
 def logout() -> None:
     """Clear the locally stored auth token."""
+    token = config.get_token()
+    if token:
+        try:
+            ApiClient(config.get_base_url(), token=token).logout()
+        except ApiError:
+            pass  # best-effort: still clear local state below even if offline
     config.clear_token()
     config.clear_active_classroom()
     typer.echo("Logged out.")

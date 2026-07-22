@@ -49,6 +49,9 @@ class ApiClient:
         response = self._request("POST", "/api/auth/login/", data={"username": username, "password": password})
         return response.json()["token"]
 
+    def logout(self) -> None:
+        self._request("POST", "/api/auth/logout/")
+
     def list_exercises(self) -> list[dict]:
         return self._request("GET", "/api/exercises/").json()
 
