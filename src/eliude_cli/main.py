@@ -1,7 +1,7 @@
 import typer
 
 from . import __version__
-from .commands import classrooms, config_cmd, exercises, get, login, practices, status, submissions, submit, update
+from .commands import classrooms, config_cmd, get, login, practices, questions, status, submissions, submit, update
 from .version_check import maybe_warn_outdated
 
 app = typer.Typer(name="eliude", help="CLI for the Eliude C programming judge")
@@ -23,7 +23,7 @@ app.command(name="switch")(classrooms.switch)
 app.command(name="update")(update.update)
 app.command(name="get")(get.get)
 app.command(name="status")(status.status)
-app.command(name="show")(exercises.show_exercise)
+app.command(name="show")(questions.show_question)
 
 classrooms_app = typer.Typer(help="Manage your classrooms")
 classrooms_app.command("list")(classrooms.list_classrooms)
@@ -43,19 +43,19 @@ practices_app.command("list")(practices.list_practices)
 practices_app.command("switch")(practices.switch)
 app.add_typer(practices_app, name="practices")
 
-exercises_app = typer.Typer(help="Browse exercises")
+questions_app = typer.Typer(help="Browse the active practice's questions")
 
 
-@exercises_app.callback(invoke_without_command=True)
-def exercises_callback(ctx: typer.Context) -> None:
+@questions_app.callback(invoke_without_command=True)
+def questions_callback(ctx: typer.Context) -> None:
     if ctx.invoked_subcommand is None:
-        exercises.list_exercises(show_timestamp=False, unsolved=False)
+        questions.list_questions(show_timestamp=False, unsolved=False)
         raise typer.Exit()
 
 
-exercises_app.command("list")(exercises.list_exercises)
-exercises_app.command("show")(exercises.show_exercise)
-app.add_typer(exercises_app, name="exercises")
+questions_app.command("list")(questions.list_questions)
+questions_app.command("show")(questions.show_question)
+app.add_typer(questions_app, name="questions")
 
 submissions_app = typer.Typer(help="Check submission results")
 submissions_app.command("status")(submissions.status)

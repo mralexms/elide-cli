@@ -14,7 +14,7 @@ def _fetch_questions(classroom_slug: str, practice_slug: str) -> list[dict]:
     scoped_client = ApiClient(
         config.get_base_url(), token=config.get_token(), classroom=classroom_slug, practice=practice_slug
     )
-    return scoped_client.list_exercises()
+    return scoped_client.list_questions()
 
 
 def _print_stats(questions: list[dict], indent: str = "") -> None:

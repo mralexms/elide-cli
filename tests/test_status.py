@@ -44,7 +44,7 @@ def mock_backend(monkeypatch):
     )
     monkeypatch.setattr(
         ApiClient,
-        "list_exercises",
+        "list_questions",
         lambda self, tag=None: QUESTIONS_BY_PRACTICE[self.session.headers["X-Eliude-Practice"]],
     )
 

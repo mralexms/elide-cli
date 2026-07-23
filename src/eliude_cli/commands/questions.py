@@ -12,44 +12,44 @@ _STATUS_COLORS = {
 }
 
 
-def list_exercises(
+def list_questions(
     show_timestamp: bool = typer.Option(
-        False, "--show-timestamp", help="Also show when you last submitted each exercise"
+        False, "--show-timestamp", help="Also show when you last submitted each question"
     ),
     unsolved: bool = typer.Option(
-        False, "--unsolved", help="Only show exercises you haven't passed yet (never submitted or failing)"
+        False, "--unsolved", help="Only show questions you haven't passed yet (never submitted or failing)"
     ),
-    tag: str = typer.Option(None, "--tag", help="Only show exercises with this tag (e.g. vetores)"),
+    tag: str = typer.Option(None, "--tag", help="Only show questions with this tag (e.g. vetores)"),
 ) -> None:
     """List the active practice's questions."""
     client = require_practice_client()
     try:
-        exercises = client.list_exercises(tag=tag)
+        questions = client.list_questions(tag=tag)
     except ApiError as e:
         typer.secho(str(e), fg=typer.colors.RED)
         raise typer.Exit(code=1)
 
     if unsolved:
-        exercises = [ex for ex in exercises if ex.get("status", "pending") != "success"]
+        questions = [q for q in questions if q.get("status", "pending") != "success"]
 
-    if not exercises:
-        typer.echo("No exercises available.")
+    if not questions:
+        typer.echo("No questions available.")
         return
 
-    for ex in exercises:
-        status = ex.get("status", "pending")
+    for q in questions:
+        status = q.get("status", "pending")
         status_label = typer.style(f"{status:<8}", fg=_STATUS_COLORS.get(status))
-        line = f"{ex['slug']:<30} [{ex['difficulty']:<6}] {status_label} {ex['title']}"
-        tags = ex.get("tags") or []
+        line = f"{q['slug']:<30} [{q['difficulty']:<6}] {status_label} {q['title']}"
+        tags = q.get("tags") or []
         if tags:
             line += f"  [{', '.join(t['name'] for t in tags)}]"
         if show_timestamp:
-            timestamp = ex.get("last_submission_at") or "-"
+            timestamp = q.get("last_submission_at") or "-"
             line += f"  (last submitted: {timestamp})"
         typer.echo(line)
 
 
-def show_exercise(
+def show_question(
     slug: str,
     download: bool = typer.Option(
         False, "--download", help="Also save the first sample test case as <slug>_input.txt / <slug>_output.txt"
@@ -58,21 +58,21 @@ def show_exercise(
     """Show a question's statement and sample test cases."""
     client = require_practice_client()
     try:
-        exercise = client.get_exercise(slug)
+        question = client.get_question(slug)
     except ApiError as e:
         typer.secho(str(e), fg=typer.colors.RED)
         raise typer.Exit(code=1)
 
-    typer.secho(exercise["title"], bold=True)
-    typer.echo(f"Difficulty: {exercise['difficulty']}")
-    typer.echo(f"Time limit: {exercise['time_limit_seconds']}s  Memory limit: {exercise['memory_limit_mb']}MB")
-    tags = exercise.get("tags") or []
+    typer.secho(question["title"], bold=True)
+    typer.echo(f"Difficulty: {question['difficulty']}")
+    typer.echo(f"Time limit: {question['time_limit_seconds']}s  Memory limit: {question['memory_limit_mb']}MB")
+    tags = question.get("tags") or []
     if tags:
         typer.echo(f"Tags: {', '.join(t['name'] for t in tags)}")
     typer.echo()
-    typer.echo(exercise["statement"])
+    typer.echo(question["statement"])
 
-    samples = exercise.get("sample_test_cases", [])
+    samples = question.get("sample_test_cases", [])
     if samples:
         typer.echo()
         typer.secho("Sample test cases:", bold=True)

@@ -56,11 +56,11 @@ class ApiClient:
     def logout(self) -> None:
         self._request("POST", "/api/auth/logout/")
 
-    def list_exercises(self, tag: str | None = None) -> list[dict]:
+    def list_questions(self, tag: str | None = None) -> list[dict]:
         params = {"tag": tag} if tag else None
         return self._request("GET", "/api/practice-questions/", params=params).json()
 
-    def get_exercise(self, slug: str) -> dict:
+    def get_question(self, slug: str) -> dict:
         return self._request("GET", f"/api/practice-questions/{slug}/").json()
 
     def submit(self, slug: str, source_code: str) -> dict:
