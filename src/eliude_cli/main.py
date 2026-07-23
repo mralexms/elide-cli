@@ -7,8 +7,19 @@ from .version_check import maybe_warn_outdated
 app = typer.Typer(name="eliude", help="CLI for the Eliude C programming judge")
 
 
+def _version_callback(value: bool) -> None:
+    if value:
+        typer.echo(f"eliude {__version__}")
+        raise typer.Exit()
+
+
 @app.callback(invoke_without_command=True)
-def main_callback(ctx: typer.Context) -> None:
+def main_callback(
+    ctx: typer.Context,
+    version: bool = typer.Option(
+        None, "--version", callback=_version_callback, is_eager=True, help="Show the version and exit."
+    ),
+) -> None:
     maybe_warn_outdated()
     if ctx.invoked_subcommand is None:
         typer.echo(f"eliude {__version__}")
