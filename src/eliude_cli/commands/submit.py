@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import typer
+from rich.console import Console
 
 from ..client import ApiError
 from ..formatting import print_submission_result
@@ -12,7 +13,8 @@ def submit(slug: str, file: Path = typer.Argument(..., exists=True, readable=Tru
     client = require_practice_client()
     source_code = file.read_text()
     try:
-        result = client.submit(slug, source_code)
+        with Console().status("Grading your submission...", spinner="dots"):
+            result = client.submit(slug, source_code)
     except ApiError as e:
         typer.secho(str(e), fg=typer.colors.RED)
         raise typer.Exit(code=1)
