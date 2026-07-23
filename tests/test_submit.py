@@ -53,3 +53,34 @@ def test_submit_failing_solution_exits_nonzero(logged_in_with_practice, source_f
     monkeypatch.setattr(ApiClient, "submit", lambda self, slug, source_code: failed)
     result = runner.invoke(app, ["submit", "q1", str(source_file)])
     assert result.exit_code == 1
+
+
+def test_submit_shows_ai_criteria_not_met(logged_in_with_practice, source_file, monkeypatch):
+    failed = {
+        "status": "failed",
+        "result_detail": {
+            "test_cases": [{"passed": True}],
+            "passed_count": 1,
+            "total_count": 1,
+            "ai_check": {"criteria_met": False, "feedback": "Uses a while loop instead of a for loop."},
+        },
+    }
+    monkeypatch.setattr(ApiClient, "submit", lambda self, slug, source_code: failed)
+    result = runner.invoke(app, ["submit", "q1", str(source_file)])
+    assert result.exit_code == 1
+    assert "Criteria not met" in result.output
+    assert "Uses a while loop instead of a for loop." in result.output
+
+
+def test_submit_hides_criteria_message_when_met(logged_in_with_practice, source_file, monkeypatch):
+    passed = {
+        **FAKE_RESULT,
+        "result_detail": {
+            **FAKE_RESULT["result_detail"],
+            "ai_check": {"criteria_met": True, "feedback": "Uses a for loop."},
+        },
+    }
+    monkeypatch.setattr(ApiClient, "submit", lambda self, slug, source_code: passed)
+    result = runner.invoke(app, ["submit", "q1", str(source_file)])
+    assert result.exit_code == 0
+    assert "Criteria not met" not in result.output

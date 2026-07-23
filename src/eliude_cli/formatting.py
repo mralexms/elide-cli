@@ -28,6 +28,11 @@ def print_submission_result(data: dict) -> None:
                 if tc.get("stderr"):
                     typer.echo(f"  stderr:   {tc['stderr']!r}")
 
+    ai_check = result.get("ai_check")
+    if ai_check and not ai_check.get("criteria_met", True):
+        typer.secho("Criteria not met:", fg=typer.colors.RED, bold=True)
+        typer.echo(f"  {ai_check.get('feedback', '')}")
+
     passed_count = result.get("passed_count", 0)
     total_count = result.get("total_count", 0)
     color = typer.colors.GREEN if status == "passed" else typer.colors.RED
