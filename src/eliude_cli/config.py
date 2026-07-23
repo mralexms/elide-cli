@@ -72,6 +72,22 @@ def clear_active_classroom() -> None:
     save_config(data)
 
 
+def get_active_practice() -> str | None:
+    return load_config().get("active_practice")
+
+
+def set_active_practice(slug: str) -> None:
+    data = load_config()
+    data["active_practice"] = slug
+    save_config(data)
+
+
+def clear_active_practice() -> None:
+    data = load_config()
+    data.pop("active_practice", None)
+    save_config(data)
+
+
 def get_last_version_check() -> float | None:
     return load_config().get("last_version_check")
 

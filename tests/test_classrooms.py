@@ -69,6 +69,13 @@ def test_switch_with_valid_slug_sets_active(logged_in, mock_classrooms):
     assert logged_in.get_active_classroom() == "turma-b"
 
 
+def test_switch_with_valid_slug_clears_active_practice(logged_in, mock_classrooms):
+    logged_in.set_active_practice("some-practice")
+    result = runner.invoke(app, ["switch", "turma-b"])
+    assert result.exit_code == 0
+    assert logged_in.get_active_practice() is None
+
+
 def test_switch_with_invalid_slug_fails_without_changing_config(logged_in, mock_classrooms):
     logged_in.set_active_classroom("turma-a")
     result = runner.invoke(app, ["switch", "does-not-exist"])

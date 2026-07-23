@@ -6,13 +6,17 @@ class ApiError(Exception):
 
 
 class ApiClient:
-    def __init__(self, base_url: str, token: str | None = None, classroom: str | None = None):
+    def __init__(
+        self, base_url: str, token: str | None = None, classroom: str | None = None, practice: str | None = None
+    ):
         self.base_url = base_url.rstrip("/")
         self.session = requests.Session()
         if token:
             self.session.headers["Authorization"] = f"Token {token}"
         if classroom:
             self.session.headers["X-Eliude-Classroom"] = classroom
+        if practice:
+            self.session.headers["X-Eliude-Practice"] = practice
 
     def _request(self, method: str, path: str, **kwargs):
         url = f"{self.base_url}{path}"
@@ -54,23 +58,29 @@ class ApiClient:
 
     def list_exercises(self, tag: str | None = None) -> list[dict]:
         params = {"tag": tag} if tag else None
-        return self._request("GET", "/api/exercises/", params=params).json()
+        return self._request("GET", "/api/practice-questions/", params=params).json()
 
     def get_exercise(self, slug: str) -> dict:
-        return self._request("GET", f"/api/exercises/{slug}/").json()
+        return self._request("GET", f"/api/practice-questions/{slug}/").json()
 
     def submit(self, slug: str, source_code: str) -> dict:
-        payload = {"exercise_slug": slug, "source_code": source_code}
-        return self._request("POST", "/api/submissions/", json=payload).json()
+        payload = {"source_code": source_code}
+        return self._request("POST", f"/api/practice-questions/{slug}/submit/", json=payload).json()
 
     def get_submission(self, submission_id: int) -> dict:
         return self._request("GET", f"/api/submissions/{submission_id}/").json()
 
     def get_latest_submission(self, slug: str) -> dict:
-        return self._request("GET", f"/api/submissions/latest/{slug}/").json()
+        return self._request("GET", f"/api/practice-questions/{slug}/latest/").json()
 
     def list_classrooms(self) -> list[dict]:
         return self._request("GET", "/api/classrooms/").json()
+
+    def list_practices(self) -> list[dict]:
+        return self._request("GET", "/api/practices/").json()
+
+    def start_practice(self, slug: str) -> dict:
+        return self._request("POST", f"/api/practices/{slug}/start/").json()
 
     def get_latest_release(self) -> dict:
         return self._request("GET", "/api/cli/latest/").json()

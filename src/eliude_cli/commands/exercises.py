@@ -3,7 +3,7 @@ from pathlib import Path
 import typer
 
 from ..client import ApiError
-from ..session import require_classroom_client
+from ..session import require_practice_client
 
 _STATUS_COLORS = {
     "success": typer.colors.GREEN,
@@ -21,8 +21,8 @@ def list_exercises(
     ),
     tag: str = typer.Option(None, "--tag", help="Only show exercises with this tag (e.g. vetores)"),
 ) -> None:
-    """List available exercises, ordered alphabetically by slug."""
-    client = require_classroom_client()
+    """List the active practice's questions."""
+    client = require_practice_client()
     try:
         exercises = client.list_exercises(tag=tag)
     except ApiError as e:
@@ -55,8 +55,8 @@ def show_exercise(
         False, "--download", help="Also save the first sample test case as <slug>_input.txt / <slug>_output.txt"
     ),
 ) -> None:
-    """Show an exercise's statement and sample test cases."""
-    client = require_classroom_client()
+    """Show a question's statement and sample test cases."""
+    client = require_practice_client()
     try:
         exercise = client.get_exercise(slug)
     except ApiError as e:

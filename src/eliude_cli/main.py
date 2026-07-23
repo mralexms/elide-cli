@@ -1,7 +1,7 @@
 import typer
 
 from . import __version__
-from .commands import classrooms, config_cmd, exercises, get, login, status, submissions, submit, update
+from .commands import classrooms, config_cmd, exercises, get, login, practices, status, submissions, submit, update
 from .version_check import maybe_warn_outdated
 
 app = typer.Typer(name="eliude", help="CLI for the Eliude C programming judge")
@@ -28,6 +28,20 @@ app.command(name="show")(exercises.show_exercise)
 classrooms_app = typer.Typer(help="Manage your classrooms")
 classrooms_app.command("list")(classrooms.list_classrooms)
 app.add_typer(classrooms_app, name="classrooms")
+
+practices_app = typer.Typer(help="Manage practices in the active classroom")
+
+
+@practices_app.callback(invoke_without_command=True)
+def practices_callback(ctx: typer.Context) -> None:
+    if ctx.invoked_subcommand is None:
+        practices.list_practices()
+        raise typer.Exit()
+
+
+practices_app.command("list")(practices.list_practices)
+practices_app.command("switch")(practices.switch)
+app.add_typer(practices_app, name="practices")
 
 exercises_app = typer.Typer(help="Browse exercises")
 

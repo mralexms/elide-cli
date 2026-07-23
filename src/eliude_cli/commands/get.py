@@ -3,15 +3,15 @@ from pathlib import Path
 import typer
 
 from ..client import ApiError
-from ..session import require_classroom_client
+from ..session import require_practice_client
 
 
 def get(
     slug: str,
     overwrite: bool = typer.Option(False, "--overwrite", help="Overwrite the destination file without prompting"),
 ) -> None:
-    """Download your latest submission for an exercise."""
-    client = require_classroom_client()
+    """Download your latest submission for a question in the active practice."""
+    client = require_practice_client()
     try:
         submission = client.get_latest_submission(slug)
     except ApiError as e:

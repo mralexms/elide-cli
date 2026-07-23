@@ -45,4 +45,5 @@ def switch(slug: Optional[str] = typer.Argument(None, help="Classroom slug to sw
         raise typer.Exit(code=1)
 
     config.set_active_classroom(slug)
+    config.clear_active_practice()
     typer.secho(f"Switched to classroom '{match['name']}' ({slug}).", fg=typer.colors.GREEN)

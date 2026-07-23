@@ -13,6 +13,7 @@ FAKE_SUBMISSION = {"source_code": "int main(void) { return 0; }\n"}
 def logged_in_with_classroom(cli_config):
     cli_config.set_token("faketoken123", "alice")
     cli_config.set_active_classroom("turma-a")
+    cli_config.set_active_practice("turma-a-exercicios")
     return cli_config
 
 

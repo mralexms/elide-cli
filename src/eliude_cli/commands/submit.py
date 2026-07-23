@@ -4,12 +4,12 @@ import typer
 
 from ..client import ApiError
 from ..formatting import print_submission_result
-from ..session import require_classroom_client
+from ..session import require_practice_client
 
 
 def submit(slug: str, file: Path = typer.Argument(..., exists=True, readable=True)) -> None:
-    """Submit a C solution for an exercise."""
-    client = require_classroom_client()
+    """Submit a C solution for a question in the active practice."""
+    client = require_practice_client()
     source_code = file.read_text()
     try:
         result = client.submit(slug, source_code)

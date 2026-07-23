@@ -38,6 +38,7 @@ FAKE_EXERCISES = [
 def logged_in_with_classroom(cli_config):
     cli_config.set_token("faketoken123", "alice")
     cli_config.set_active_classroom("turma-a")
+    cli_config.set_active_practice("turma-a-exercicios")
     return cli_config
 
 
@@ -50,6 +51,14 @@ def test_list_requires_login(cli_config):
     result = runner.invoke(app, ["exercises", "list"])
     assert result.exit_code == 1
     assert "Not logged in" in result.output
+
+
+def test_list_requires_active_practice(cli_config, mock_exercises):
+    cli_config.set_token("faketoken123", "alice")
+    cli_config.set_active_classroom("turma-a")
+    result = runner.invoke(app, ["exercises", "list"])
+    assert result.exit_code == 1
+    assert "No active practice set" in result.output
 
 
 def test_list_shows_status_for_each_exercise(logged_in_with_classroom, mock_exercises):
