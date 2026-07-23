@@ -8,15 +8,22 @@ from ..session import require_practice_client
 
 def get(
     slug: str,
-    overwrite: bool = typer.Option(False, "--overwrite", help="Overwrite the destination file without prompting"),
+    save: bool = typer.Option(False, "--save", help="Save to <slug>.c instead of printing to stdout"),
+    overwrite: bool = typer.Option(
+        False, "--overwrite", help="With --save, overwrite the destination file without prompting"
+    ),
 ) -> None:
-    """Download your latest submission for a question in the active practice."""
+    """Show your latest submission for a question in the active practice."""
     client = require_practice_client()
     try:
         submission = client.get_latest_submission(slug)
     except ApiError as e:
         typer.secho(str(e), fg=typer.colors.RED)
         raise typer.Exit(code=1)
+
+    if not save:
+        typer.echo(submission["source_code"])
+        return
 
     target = Path(f"{slug}.c")
     if target.exists() and not overwrite:

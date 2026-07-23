@@ -28,41 +28,49 @@ def test_get_requires_login(cli_config):
     assert "Not logged in" in result.output
 
 
-def test_get_writes_file_named_after_slug(logged_in_with_classroom, mock_latest_submission, tmp_path, monkeypatch):
+def test_get_without_save_prints_to_stdout(logged_in_with_classroom, mock_latest_submission, tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     result = runner.invoke(app, ["get", "hello-world"])
+    assert result.exit_code == 0
+    assert FAKE_SUBMISSION["source_code"] in result.output
+    assert not (tmp_path / "hello-world.c").exists()
+
+
+def test_get_save_writes_file_named_after_slug(logged_in_with_classroom, mock_latest_submission, tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    result = runner.invoke(app, ["get", "hello-world", "--save"])
     assert result.exit_code == 0
     saved = tmp_path / "hello-world.c"
     assert saved.exists()
     assert saved.read_text() == FAKE_SUBMISSION["source_code"]
 
 
-def test_get_overwrite_flag_skips_prompt(logged_in_with_classroom, mock_latest_submission, tmp_path, monkeypatch):
+def test_get_save_overwrite_flag_skips_prompt(logged_in_with_classroom, mock_latest_submission, tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     existing = tmp_path / "hello-world.c"
     existing.write_text("old content")
-    result = runner.invoke(app, ["get", "hello-world", "--overwrite"])
+    result = runner.invoke(app, ["get", "hello-world", "--save", "--overwrite"])
     assert result.exit_code == 0
     assert existing.read_text() == FAKE_SUBMISSION["source_code"]
 
 
-def test_get_prompts_and_overwrites_on_confirm(logged_in_with_classroom, mock_latest_submission, tmp_path, monkeypatch):
+def test_get_save_prompts_and_overwrites_on_confirm(logged_in_with_classroom, mock_latest_submission, tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     existing = tmp_path / "hello-world.c"
     existing.write_text("old content")
-    result = runner.invoke(app, ["get", "hello-world"], input="y\n")
+    result = runner.invoke(app, ["get", "hello-world", "--save"], input="y\n")
     assert result.exit_code == 0
     assert "already exists" in result.output
     assert existing.read_text() == FAKE_SUBMISSION["source_code"]
 
 
-def test_get_prompts_and_saves_under_new_name_on_decline(
+def test_get_save_prompts_and_saves_under_new_name_on_decline(
     logged_in_with_classroom, mock_latest_submission, tmp_path, monkeypatch
 ):
     monkeypatch.chdir(tmp_path)
     existing = tmp_path / "hello-world.c"
     existing.write_text("old content")
-    result = runner.invoke(app, ["get", "hello-world"], input="n\nrenamed.c\n")
+    result = runner.invoke(app, ["get", "hello-world", "--save"], input="n\nrenamed.c\n")
     assert result.exit_code == 0
     assert existing.read_text() == "old content"
     assert (tmp_path / "renamed.c").read_text() == FAKE_SUBMISSION["source_code"]
