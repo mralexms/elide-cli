@@ -29,11 +29,15 @@ def print_submission_result(data: dict) -> None:
                     typer.echo(f"  stderr:   {tc['stderr']!r}")
 
     ai_check = result.get("ai_check")
-    if ai_check and not ai_check.get("criteria_met", True):
+    criteria_not_met = bool(ai_check) and not ai_check.get("criteria_met", True)
+    if criteria_not_met:
         typer.secho("Criteria not met:", fg=typer.colors.RED, bold=True)
         typer.echo(f"  {ai_check.get('feedback', '')}")
 
     passed_count = result.get("passed_count", 0)
     total_count = result.get("total_count", 0)
     color = typer.colors.GREEN if status == "passed" else typer.colors.RED
-    typer.secho(f"Result: {passed_count}/{total_count} test cases passed", fg=color, bold=True)
+    summary = f"Result: {passed_count}/{total_count} test cases passed"
+    if criteria_not_met:
+        summary += ", but criteria not met"
+    typer.secho(summary, fg=color, bold=True)

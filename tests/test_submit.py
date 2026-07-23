@@ -70,6 +70,7 @@ def test_submit_shows_ai_criteria_not_met(logged_in_with_practice, source_file, 
     assert result.exit_code == 1
     assert "Criteria not met" in result.output
     assert "Uses a while loop instead of a for loop." in result.output
+    assert "Result: 1/1 test cases passed, but criteria not met" in result.output
 
 
 def test_submit_hides_criteria_message_when_met(logged_in_with_practice, source_file, monkeypatch):
@@ -84,3 +85,5 @@ def test_submit_hides_criteria_message_when_met(logged_in_with_practice, source_
     result = runner.invoke(app, ["submit", "q1", str(source_file)])
     assert result.exit_code == 0
     assert "Criteria not met" not in result.output
+    assert "Result: 1/1 test cases passed" in result.output
+    assert "but criteria not met" not in result.output
