@@ -13,6 +13,7 @@ FAKE_EXERCISES = [
         "difficulty": "easy",
         "status": "success",
         "last_submission_at": "2026-07-21T15:26:27.257941Z",
+        "tags": [],
     },
     {
         "slug": "sum-two-numbers",
@@ -20,6 +21,7 @@ FAKE_EXERCISES = [
         "difficulty": "easy",
         "status": "pending",
         "last_submission_at": None,
+        "tags": [{"name": "Vetores", "slug": "vetores"}],
     },
     {
         "slug": "broken-attempt",
@@ -27,6 +29,7 @@ FAKE_EXERCISES = [
         "difficulty": "easy",
         "status": "failure",
         "last_submission_at": "2026-07-21T16:00:00.000000Z",
+        "tags": [],
     },
 ]
 
@@ -40,7 +43,7 @@ def logged_in_with_classroom(cli_config):
 
 @pytest.fixture
 def mock_exercises(monkeypatch):
-    monkeypatch.setattr(ApiClient, "list_exercises", lambda self: FAKE_EXERCISES)
+    monkeypatch.setattr(ApiClient, "list_exercises", lambda self, tag=None: FAKE_EXERCISES)
 
 
 def test_list_requires_login(cli_config):
@@ -87,10 +90,29 @@ def test_list_unsolved_flag_shows_pending_and_failed_but_not_success(logged_in_w
 
 
 def test_list_unsolved_flag_with_nothing_unsolved(logged_in_with_classroom, monkeypatch):
-    monkeypatch.setattr(ApiClient, "list_exercises", lambda self: [FAKE_EXERCISES[0]])
+    monkeypatch.setattr(ApiClient, "list_exercises", lambda self, tag=None: [FAKE_EXERCISES[0]])
     result = runner.invoke(app, ["exercises", "list", "--unsolved"])
     assert result.exit_code == 0
     assert "No exercises available." in result.output
+
+
+def test_list_shows_tags_inline(logged_in_with_classroom, mock_exercises):
+    result = runner.invoke(app, ["exercises", "list"])
+    assert result.exit_code == 0
+    assert "Vetores" in result.output
+
+
+def test_list_tag_option_forwards_to_client(logged_in_with_classroom, monkeypatch):
+    captured = {}
+
+    def fake_list_exercises(self, tag=None):
+        captured["tag"] = tag
+        return FAKE_EXERCISES
+
+    monkeypatch.setattr(ApiClient, "list_exercises", fake_list_exercises)
+    result = runner.invoke(app, ["exercises", "list", "--tag", "vetores"])
+    assert result.exit_code == 0
+    assert captured["tag"] == "vetores"
 
 
 FAKE_EXERCISE_DETAIL = {
@@ -99,6 +121,7 @@ FAKE_EXERCISE_DETAIL = {
     "time_limit_seconds": 5,
     "memory_limit_mb": 64,
     "statement": "Say hello.",
+    "tags": [{"name": "Loops", "slug": "loops"}],
     "sample_test_cases": [
         {"id": 1, "stdin_data": "World\n", "expected_stdout": "Hello, World!\n", "order": 1},
     ],
@@ -116,6 +139,12 @@ def test_show_requires_login(cli_config):
     result = runner.invoke(app, ["exercises", "show", "hello-world"])
     assert result.exit_code == 1
     assert "Not logged in" in result.output
+
+
+def test_show_displays_tags(logged_in_with_classroom, mock_exercise_detail):
+    result = runner.invoke(app, ["exercises", "show", "hello-world"])
+    assert result.exit_code == 0
+    assert "Tags: Loops" in result.output
 
 
 def test_show_shortcut_matches_exercises_show(logged_in_with_classroom, mock_exercise_detail):

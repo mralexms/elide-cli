@@ -19,11 +19,12 @@ def list_exercises(
     unsolved: bool = typer.Option(
         False, "--unsolved", help="Only show exercises you haven't passed yet (never submitted or failing)"
     ),
+    tag: str = typer.Option(None, "--tag", help="Only show exercises with this tag (e.g. vetores)"),
 ) -> None:
     """List available exercises, ordered alphabetically by slug."""
     client = require_classroom_client()
     try:
-        exercises = client.list_exercises()
+        exercises = client.list_exercises(tag=tag)
     except ApiError as e:
         typer.secho(str(e), fg=typer.colors.RED)
         raise typer.Exit(code=1)
@@ -39,6 +40,9 @@ def list_exercises(
         status = ex.get("status", "pending")
         status_label = typer.style(f"{status:<8}", fg=_STATUS_COLORS.get(status))
         line = f"{ex['slug']:<30} [{ex['difficulty']:<6}] {status_label} {ex['title']}"
+        tags = ex.get("tags") or []
+        if tags:
+            line += f"  [{', '.join(t['name'] for t in tags)}]"
         if show_timestamp:
             timestamp = ex.get("last_submission_at") or "-"
             line += f"  (last submitted: {timestamp})"
@@ -62,6 +66,9 @@ def show_exercise(
     typer.secho(exercise["title"], bold=True)
     typer.echo(f"Difficulty: {exercise['difficulty']}")
     typer.echo(f"Time limit: {exercise['time_limit_seconds']}s  Memory limit: {exercise['memory_limit_mb']}MB")
+    tags = exercise.get("tags") or []
+    if tags:
+        typer.echo(f"Tags: {', '.join(t['name'] for t in tags)}")
     typer.echo()
     typer.echo(exercise["statement"])
 
