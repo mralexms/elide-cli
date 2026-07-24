@@ -190,7 +190,17 @@ def test_show_download_with_no_sample_test_cases(logged_in_with_classroom, monke
 def test_show_caption_prints_only_a_c_comment_block(logged_in_with_classroom, mock_question_detail):
     result = runner.invoke(app, ["questions", "show", "hello-world", "--caption"])
     assert result.exit_code == 0
-    assert result.output == "/*\n * Hello World\n *\n * Say hello.\n */\n"
+    assert result.output == (
+        "/*\n"
+        " * Classroom: turma-a\n"
+        " * Practice: turma-a-exercicios\n"
+        " * Question: hello-world\n"
+        " *\n"
+        " * Hello World\n"
+        " *\n"
+        " * Say hello.\n"
+        " */\n"
+    )
 
 
 def test_show_caption_escapes_embedded_comment_terminators(logged_in_with_classroom, monkeypatch):

@@ -2,6 +2,7 @@ from pathlib import Path
 
 import typer
 
+from .. import config
 from ..client import ApiError
 from ..session import require_practice_client
 
@@ -49,10 +50,18 @@ def list_questions(
         typer.echo(line)
 
 
-def _format_caption(question: dict) -> str:
+def _format_caption(question: dict, classroom: str, practice: str, slug: str) -> str:
     """The question's title/statement as a C block comment, e.g. to paste at
     the top of a solution file."""
-    lines = ["/*", f" * {question['title']}", " *"]
+    lines = [
+        "/*",
+        f" * Classroom: {classroom}",
+        f" * Practice: {practice}",
+        f" * Question: {slug}",
+        " *",
+        f" * {question['title']}",
+        " *",
+    ]
     for line in question["statement"].splitlines():
         # Guard against the statement itself containing "*/", which would
         # otherwise prematurely close the comment block.
@@ -91,7 +100,7 @@ def show_question(
     samples = question.get("sample_test_cases", [])
 
     if caption:
-        typer.echo(_format_caption(question))
+        typer.echo(_format_caption(question, config.get_active_classroom(), config.get_active_practice(), slug))
         return
 
     if input_sample or output_sample:
