@@ -46,9 +46,10 @@ def update() -> None:
         typer.secho(f"Already up to date (version {installed}).", fg=typer.colors.GREEN)
         return
 
+    install_target = f"git+{release['repo_url']}@{release['version']}"
     typer.echo(f"Upgrading eliude-cli {installed} -> {latest} ...")
     result = subprocess.run(
-        [sys.executable, "-m", "pip", "install", "--upgrade", "--force-reinstall", release["download_url"]],
+        [sys.executable, "-m", "pip", "install", "--upgrade", "--force-reinstall", install_target],
     )
     if result.returncode != 0:
         typer.secho("Upgrade failed. See the pip output above for details.", fg=typer.colors.RED)

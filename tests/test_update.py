@@ -10,7 +10,9 @@ runner = CliRunner()
 def test_update_reports_already_up_to_date(cli_config, monkeypatch):
     monkeypatch.setattr(update_cmd, "_is_editable_install", lambda: False)
     monkeypatch.setattr(
-        ApiClient, "get_latest_release", lambda self: {"version": "0.1.0", "download_url": "http://x/whl"}
+        ApiClient,
+        "get_latest_release",
+        lambda self: {"version": "0.1.0", "repo_url": "https://github.com/mralexms/elide-cli.git"},
     )
     monkeypatch.setattr(update_cmd, "installed_version_str", "0.1.0")
     result = runner.invoke(app, ["update"])
@@ -23,7 +25,7 @@ def test_update_runs_pip_install_when_outdated(cli_config, monkeypatch):
     monkeypatch.setattr(
         ApiClient,
         "get_latest_release",
-        lambda self: {"version": "9.9.9", "download_url": "http://x/eliude_cli-9.9.9-py3-none-any.whl"},
+        lambda self: {"version": "9.9.9", "repo_url": "https://github.com/mralexms/elide-cli.git"},
     )
     monkeypatch.setattr(update_cmd, "installed_version_str", "0.1.0")
 
@@ -39,7 +41,7 @@ def test_update_runs_pip_install_when_outdated(cli_config, monkeypatch):
     monkeypatch.setattr(update_cmd.subprocess, "run", fake_run)
     result = runner.invoke(app, ["update"])
     assert result.exit_code == 0
-    assert calls["cmd"][-1] == "http://x/eliude_cli-9.9.9-py3-none-any.whl"
+    assert calls["cmd"][-1] == "git+https://github.com/mralexms/elide-cli.git@9.9.9"
 
 
 def test_update_refuses_on_editable_install(cli_config, monkeypatch):
