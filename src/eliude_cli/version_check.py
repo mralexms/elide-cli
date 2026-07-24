@@ -1,42 +1,48 @@
-import time
-
 import typer
 from packaging.version import InvalidVersion, Version
 
 from . import __version__ as installed_version_str
-from . import config
 from .client import ApiError
 from .session import anonymous_client
 
-CHECK_INTERVAL_SECONDS = 24 * 60 * 60
+# Commands that must keep working even when the installed CLI is
+# incompatible with the configured server — otherwise a wrong base_url (or
+# an unreachable/misconfigured server) would leave the user with no way to
+# fix their own setup.
+EXEMPT_SUBCOMMANDS = {"config"}
 
 
-def maybe_warn_outdated() -> None:
-    last_check = config.get_last_version_check()
-    now = time.time()
-    if last_check is not None and (now - last_check) < CHECK_INTERVAL_SECONDS:
+def check_version_compatibility(ctx: typer.Context) -> None:
+    """Confirms the installed CLI version matches exactly what the
+    configured server declares (see cli_releases on the backend). Runs on
+    every invocation — there's no daily throttle, since a mismatch can
+    change the moment a school upgrades or rolls back their server.
+
+    Fails **closed** (blocks the command) only on a confirmed mismatch.
+    Fails **open** (lets the command run normally) if the check itself
+    can't be completed — server unreachable, no release published, or a
+    malformed version — since those are infra problems, not confirmed
+    incompatibility, and must never brick the CLI.
+    """
+    if ctx.invoked_subcommand is None or ctx.invoked_subcommand in EXEMPT_SUBCOMMANDS:
         return
 
     try:
-        _warn_if_outdated()
-    except Exception:
-        # A background version check must never break a real command.
-        pass
-    finally:
-        config.set_last_version_check(now)
-
-
-def _warn_if_outdated() -> None:
-    try:
         release = anonymous_client().get_latest_release()
-        latest = Version(release["version"])
+        required = Version(release["version"])
         installed = Version(installed_version_str)
     except (ApiError, KeyError, InvalidVersion):
         return
 
-    if latest > installed:
-        typer.secho(
-            f"A new version of eliude-cli is available: {latest} (you have {installed}). "
-            "Run `eliude update` to upgrade.",
-            fg=typer.colors.YELLOW,
-        )
+    if required == installed:
+        return
+
+    reinstall_command = f'pipx install --force "git+{release["repo_url"]}@{release["version"]}"'
+    if required > installed:
+        reason = f"This server requires eliude-cli {required}, but you have {installed} installed."
+    else:
+        reason = f"This server expects an older eliude-cli ({required}); you have {installed} installed."
+
+    typer.secho(reason, fg=typer.colors.RED)
+    typer.echo(f"\n  {reinstall_command}\n")
+    raise typer.Exit(code=1)

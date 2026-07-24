@@ -17,13 +17,15 @@ CLI for the Eliude C programming judge.
    eliude config set-url http://<your-eliude-host>
    ```
 
-## Updating
+## Version compatibility
 
-The CLI checks for a newer version once a day and prints a warning if you're behind. Your Eliude server declares which version (a git tag in this repo) it's compatible with — `eliude update` installs exactly that one:
+Every time you run a command, the CLI checks that its version matches exactly what your configured server declares as compatible. If it doesn't match — either direction — the command is refused and the CLI prints the exact command to reinstall the right version, e.g.:
 
 ```bash
-eliude update
+pipx install --force "git+https://github.com/mralexms/elide-cli.git@v0.2.0"
 ```
+
+There's no self-update command — you always run that command yourself. `eliude config set-url` (and nothing else) keeps working even when versions don't match, so you can always fix a wrong server URL. If the server is unreachable or hasn't published a release, the check fails open and your commands run normally.
 
 ## Releasing a new version
 

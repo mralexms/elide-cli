@@ -1,8 +1,8 @@
 import typer
 
 from . import __version__
-from .commands import classrooms, config_cmd, get, login, practices, questions, status, submissions, submit, update
-from .version_check import maybe_warn_outdated
+from .commands import classrooms, config_cmd, get, login, practices, questions, status, submissions, submit
+from .version_check import check_version_compatibility
 
 app = typer.Typer(name="eliude", help="CLI for the Eliude C programming judge")
 
@@ -20,7 +20,7 @@ def main_callback(
         None, "--version", callback=_version_callback, is_eager=True, help="Show the version and exit."
     ),
 ) -> None:
-    maybe_warn_outdated()
+    check_version_compatibility(ctx)
     if ctx.invoked_subcommand is None:
         typer.echo(f"eliude {__version__}")
         typer.echo(ctx.get_help())
@@ -31,7 +31,6 @@ app.command(name="login")(login.login)
 app.command(name="logout")(login.logout)
 app.command(name="submit")(submit.submit)
 app.command(name="switch")(classrooms.switch)
-app.command(name="update")(update.update)
 app.command(name="get")(get.get)
 app.command(name="status")(status.status)
 app.command(name="show")(questions.show_question)

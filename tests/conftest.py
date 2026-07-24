@@ -17,4 +17,4 @@ def _skip_version_check(monkeypatch):
     # via the root callback. Patched at the main.py call site (not on
     # version_check itself) so tests that exercise version_check directly
     # are unaffected.
-    monkeypatch.setattr("eliude_cli.main.maybe_warn_outdated", lambda: None)
+    monkeypatch.setattr("eliude_cli.main.check_version_compatibility", lambda ctx: None)

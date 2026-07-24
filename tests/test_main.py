@@ -1,6 +1,7 @@
 from typer.testing import CliRunner
 
-from eliude_cli import __version__
+from eliude_cli import __version__, main as main_module, version_check
+from eliude_cli.client import ApiClient
 from eliude_cli.main import app
 
 runner = CliRunner()
@@ -21,9 +22,28 @@ def test_version_flag_prints_version_only(cli_config):
 
 
 def test_version_flag_skips_version_check_network_call(cli_config, monkeypatch):
-    def _boom():
-        raise AssertionError("maybe_warn_outdated should not run for --version")
+    def _boom(ctx):
+        raise AssertionError("check_version_compatibility should not run for --version")
 
-    monkeypatch.setattr("eliude_cli.main.maybe_warn_outdated", _boom)
+    monkeypatch.setattr("eliude_cli.main.check_version_compatibility", _boom)
     result = runner.invoke(app, ["--version"])
+    assert result.exit_code == 0
+
+
+def test_incompatible_version_blocks_a_real_command(cli_config, monkeypatch):
+    monkeypatch.setattr(main_module, "check_version_compatibility", version_check.check_version_compatibility)
+    monkeypatch.setattr(
+        ApiClient, "get_latest_release", lambda self: {"version": "999.0.0", "repo_url": "https://x"}
+    )
+    result = runner.invoke(app, ["classrooms", "list"])
+    assert result.exit_code == 1
+    assert "requires eliude-cli 999.0.0" in result.output
+
+
+def test_incompatible_version_does_not_block_config(cli_config, monkeypatch):
+    monkeypatch.setattr(main_module, "check_version_compatibility", version_check.check_version_compatibility)
+    monkeypatch.setattr(
+        ApiClient, "get_latest_release", lambda self: {"version": "999.0.0", "repo_url": "https://x"}
+    )
+    result = runner.invoke(app, ["config", "set-url", "http://example.com"])
     assert result.exit_code == 0

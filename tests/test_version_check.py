@@ -1,36 +1,72 @@
-import time
+import pytest
+import typer
 
 from eliude_cli import version_check
 from eliude_cli.client import ApiClient, ApiError
 
+RELEASE = {"version": "0.2.0", "repo_url": "https://github.com/mralexms/elide-cli.git"}
 
-def test_skips_network_call_within_a_day(cli_config, monkeypatch):
-    cli_config.set_last_version_check(time.time())
+
+class FakeContext:
+    def __init__(self, invoked_subcommand):
+        self.invoked_subcommand = invoked_subcommand
+
+
+def test_exempt_subcommand_skips_the_check(cli_config, monkeypatch):
     calls = []
     monkeypatch.setattr(ApiClient, "get_latest_release", lambda self: calls.append(1))
-    version_check.maybe_warn_outdated()
+    version_check.check_version_compatibility(FakeContext("config"))
     assert calls == []
 
 
-def test_warns_when_outdated(cli_config, monkeypatch, capsys):
-    cli_config.set_last_version_check(0)
-    monkeypatch.setattr(
-        ApiClient,
-        "get_latest_release",
-        lambda self: {"version": "999.0.0", "download_url": "http://x/eliude_cli-999.0.0-py3-none-any.whl"},
-    )
+def test_bare_invocation_skips_the_check(cli_config, monkeypatch):
+    calls = []
+    monkeypatch.setattr(ApiClient, "get_latest_release", lambda self: calls.append(1))
+    version_check.check_version_compatibility(FakeContext(None))
+    assert calls == []
+
+
+def test_matching_version_does_not_block(cli_config, monkeypatch):
+    monkeypatch.setattr(ApiClient, "get_latest_release", lambda self: RELEASE)
+    monkeypatch.setattr(version_check, "installed_version_str", "0.2.0")
+    version_check.check_version_compatibility(FakeContext("submit"))  # must not raise
+
+
+def test_blocks_and_explains_when_server_requires_newer(cli_config, monkeypatch, capsys):
+    monkeypatch.setattr(ApiClient, "get_latest_release", lambda self: RELEASE)
     monkeypatch.setattr(version_check, "installed_version_str", "0.1.0")
-    version_check.maybe_warn_outdated()
-    assert "new version" in capsys.readouterr().out.lower()
-    assert cli_config.get_last_version_check() is not None
+    with pytest.raises(typer.Exit) as exc_info:
+        version_check.check_version_compatibility(FakeContext("submit"))
+    assert exc_info.value.exit_code == 1
+    output = capsys.readouterr().out
+    assert "requires eliude-cli 0.2.0" in output
+    assert 'pipx install --force "git+https://github.com/mralexms/elide-cli.git@0.2.0"' in output
 
 
-def test_network_failure_is_silent(cli_config, monkeypatch):
-    cli_config.set_last_version_check(0)
+def test_blocks_and_explains_when_server_requires_older(cli_config, monkeypatch, capsys):
+    monkeypatch.setattr(ApiClient, "get_latest_release", lambda self: RELEASE)
+    monkeypatch.setattr(version_check, "installed_version_str", "0.3.0")
+    with pytest.raises(typer.Exit) as exc_info:
+        version_check.check_version_compatibility(FakeContext("submit"))
+    assert exc_info.value.exit_code == 1
+    assert "expects an older eliude-cli (0.2.0)" in capsys.readouterr().out
 
+
+def test_network_failure_fails_open(cli_config, monkeypatch):
     def raise_error(self):
         raise ApiError("offline")
 
     monkeypatch.setattr(ApiClient, "get_latest_release", raise_error)
-    version_check.maybe_warn_outdated()  # must not raise
-    assert cli_config.get_last_version_check() is not None
+    version_check.check_version_compatibility(FakeContext("submit"))  # must not raise/block
+
+
+def test_malformed_release_fails_open(cli_config, monkeypatch):
+    monkeypatch.setattr(ApiClient, "get_latest_release", lambda self: {"repo_url": "https://x"})  # no "version"
+    version_check.check_version_compatibility(FakeContext("submit"))  # must not raise/block
+
+
+def test_invalid_version_fails_open(cli_config, monkeypatch):
+    monkeypatch.setattr(
+        ApiClient, "get_latest_release", lambda self: {"version": "not-a-version", "repo_url": "https://x"}
+    )
+    version_check.check_version_compatibility(FakeContext("submit"))  # must not raise/block
