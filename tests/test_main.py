@@ -47,3 +47,19 @@ def test_incompatible_version_does_not_block_config(cli_config, monkeypatch):
     )
     result = runner.invoke(app, ["config", "set-url", "http://example.com"])
     assert result.exit_code == 0
+
+
+def test_invalid_top_level_command_shows_root_help_not_generic_error(cli_config):
+    result = runner.invoke(app, ["foobar"])
+    assert result.exit_code == 2
+    assert "Usage: eliude" in result.output
+    assert "questions" in result.output  # a real subcommand is listed
+    assert "No such command" not in result.output
+
+
+def test_invalid_nested_command_shows_that_group_help(cli_config):
+    result = runner.invoke(app, ["questions", "foobar"])
+    assert result.exit_code == 2
+    assert "Usage: eliude questions" in result.output
+    assert "list" in result.output  # questions' own subcommand is listed
+    assert "No such command" not in result.output
