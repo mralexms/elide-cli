@@ -49,19 +49,58 @@ def list_questions(
         typer.echo(line)
 
 
+def _format_caption(question: dict) -> str:
+    """The question's title/statement as a C block comment, e.g. to paste at
+    the top of a solution file."""
+    lines = ["/*", f" * {question['title']}", " *"]
+    for line in question["statement"].splitlines():
+        # Guard against the statement itself containing "*/", which would
+        # otherwise prematurely close the comment block.
+        lines.append(f" * {line}".replace("*/", "* /").rstrip())
+    lines.append(" */")
+    return "\n".join(lines)
+
+
 def show_question(
     slug: str,
     download: bool = typer.Option(
         False, "--download", help="Also save the first sample test case as <slug>_input.txt / <slug>_output.txt"
     ),
+    caption: bool = typer.Option(
+        False, "--caption", help="Show only the title/statement, formatted as a C comment block"
+    ),
+    input_sample: bool = typer.Option(
+        False, "--input-sample", help="Show only the first sample test case's input"
+    ),
+    output_sample: bool = typer.Option(
+        False, "--output-sample", help="Show only the first sample test case's expected output"
+    ),
 ) -> None:
     """Show a question's statement and sample test cases."""
+    if sum([caption, input_sample, output_sample]) > 1:
+        typer.secho("Use only one of --caption, --input-sample, --output-sample at a time.", fg=typer.colors.RED)
+        raise typer.Exit(code=1)
+
     client = require_practice_client()
     try:
         question = client.get_question(slug)
     except ApiError as e:
         typer.secho(str(e), fg=typer.colors.RED)
         raise typer.Exit(code=1)
+
+    samples = question.get("sample_test_cases", [])
+
+    if caption:
+        typer.echo(_format_caption(question))
+        return
+
+    if input_sample or output_sample:
+        if not samples:
+            typer.secho("No sample test case available.", fg=typer.colors.RED)
+            raise typer.Exit(code=1)
+        sample = samples[0]
+        typer.echo(sample["stdin_data"] if input_sample else sample["expected_stdout"])
+        return
 
     typer.secho(question["title"], bold=True)
     typer.echo(f"Difficulty: {question['difficulty']}")
@@ -72,7 +111,6 @@ def show_question(
     typer.echo()
     typer.echo(question["statement"])
 
-    samples = question.get("sample_test_cases", [])
     if samples:
         typer.echo()
         typer.secho("Sample test cases:", bold=True)

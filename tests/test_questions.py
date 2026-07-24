@@ -185,3 +185,43 @@ def test_show_download_with_no_sample_test_cases(logged_in_with_classroom, monke
     assert result.exit_code == 0
     assert "No sample test case available" in result.output
     assert not (tmp_path / "hello-world_input.txt").exists()
+
+
+def test_show_caption_prints_only_a_c_comment_block(logged_in_with_classroom, mock_question_detail):
+    result = runner.invoke(app, ["questions", "show", "hello-world", "--caption"])
+    assert result.exit_code == 0
+    assert result.output == "/*\n * Hello World\n *\n * Say hello.\n */\n"
+
+
+def test_show_caption_escapes_embedded_comment_terminators(logged_in_with_classroom, monkeypatch):
+    detail = {**FAKE_QUESTION_DETAIL, "statement": "Don't write */ in your code."}
+    monkeypatch.setattr(ApiClient, "get_question", lambda self, slug: detail)
+    result = runner.invoke(app, ["questions", "show", "hello-world", "--caption"])
+    assert result.exit_code == 0
+    assert "write */ in" not in result.output  # would prematurely close the comment block
+    assert "write * / in" in result.output
+
+
+def test_show_input_sample_prints_only_the_stdin(logged_in_with_classroom, mock_question_detail):
+    result = runner.invoke(app, ["questions", "show", "hello-world", "--input-sample"])
+    assert result.exit_code == 0
+    assert result.output == "World\n\n"  # typer.echo appends its own newline
+
+
+def test_show_output_sample_prints_only_the_expected_stdout(logged_in_with_classroom, mock_question_detail):
+    result = runner.invoke(app, ["questions", "show", "hello-world", "--output-sample"])
+    assert result.exit_code == 0
+    assert result.output == "Hello, World!\n\n"
+
+
+def test_show_input_sample_with_no_sample_test_cases_fails(logged_in_with_classroom, monkeypatch):
+    monkeypatch.setattr(ApiClient, "get_question", lambda self, slug: FAKE_QUESTION_DETAIL_NO_SAMPLES)
+    result = runner.invoke(app, ["questions", "show", "hello-world", "--input-sample"])
+    assert result.exit_code == 1
+    assert "No sample test case available" in result.output
+
+
+def test_show_rejects_combining_display_mode_flags(logged_in_with_classroom, mock_question_detail):
+    result = runner.invoke(app, ["questions", "show", "hello-world", "--caption", "--input-sample"])
+    assert result.exit_code == 1
+    assert "Use only one of" in result.output
