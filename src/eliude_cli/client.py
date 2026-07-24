@@ -84,3 +84,6 @@ class ApiClient:
 
     def get_latest_release(self) -> dict:
         return self._request("GET", "/api/cli/latest/").json()
+
+    def get_health(self) -> dict:
+        return self._request("GET", "/api/health/").json()

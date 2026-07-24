@@ -1,7 +1,7 @@
 import pytest
 from typer.testing import CliRunner
 
-from eliude_cli.client import ApiClient
+from eliude_cli.client import ApiClient, ApiError
 from eliude_cli.main import app
 
 runner = CliRunner()
@@ -47,6 +47,24 @@ def mock_backend(monkeypatch):
         "list_questions",
         lambda self, tag=None: QUESTIONS_BY_PRACTICE[self.session.headers["X-Eliude-Practice"]],
     )
+
+
+def test_status_shows_server_reachability_even_when_not_logged_in(cli_config, monkeypatch):
+    monkeypatch.setattr(ApiClient, "get_health", lambda self: {"status": "ok", "version": "1.2.3"})
+    result = runner.invoke(app, ["status"])
+    assert "Server: " in result.output
+    assert "v1.2.3" in result.output
+    assert "reachable" in result.output
+
+
+def test_status_shows_server_unreachable(cli_config, monkeypatch):
+    def _boom(self):
+        raise ApiError("Could not reach the Eliude server at http://localhost:8000")
+
+    monkeypatch.setattr(ApiClient, "get_health", _boom)
+    result = runner.invoke(app, ["status"])
+    assert "unreachable" in result.output
+    assert "Could not reach the Eliude server" in result.output
 
 
 def test_status_requires_login(cli_config):

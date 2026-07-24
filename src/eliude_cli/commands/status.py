@@ -2,7 +2,17 @@ import typer
 
 from .. import config
 from ..client import ApiClient, ApiError
-from ..session import require_client
+from ..session import anonymous_client, require_client
+
+
+def _print_server_status() -> None:
+    base_url = config.get_base_url()
+    try:
+        health = anonymous_client().get_health()
+    except ApiError as e:
+        typer.secho(f"Server: {base_url} — unreachable ({e})", fg=typer.colors.RED)
+        return
+    typer.secho(f"Server: {base_url} (v{health.get('version', '?')}, reachable)", fg=typer.colors.GREEN)
 
 
 def _fetch_practices(classroom_slug: str) -> list[dict]:
@@ -34,6 +44,8 @@ def status(
     ),
 ) -> None:
     """Show your login, active classroom/practice, and question stats."""
+    _print_server_status()
+
     client = require_client()
     typer.echo(f"Logged in as: {config.get_username()}")
 
