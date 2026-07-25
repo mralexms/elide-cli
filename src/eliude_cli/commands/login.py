@@ -2,6 +2,7 @@ import typer
 
 from .. import config
 from ..client import ApiClient, ApiError
+from ..messages import t
 from ..session import anonymous_client
 
 
@@ -18,7 +19,7 @@ def login(
         raise typer.Exit(code=1)
     config.set_token(token, username)
     config.clear_active_classroom()
-    typer.secho(f"Logged in as {username}.", fg=typer.colors.GREEN)
+    typer.secho(t("login.logged_in_as", username=username), fg=typer.colors.GREEN)
 
 
 def logout() -> None:
@@ -31,4 +32,4 @@ def logout() -> None:
             pass  # best-effort: still clear local state below even if offline
     config.clear_token()
     config.clear_active_classroom()
-    typer.echo("Logged out.")
+    typer.echo(t("login.logged_out"))

@@ -3,6 +3,7 @@ from packaging.version import InvalidVersion, Version
 
 from . import __version__ as installed_version_str
 from .client import ApiError
+from .messages import t
 from .session import anonymous_client
 
 # Commands that must keep working even when the installed CLI is
@@ -39,9 +40,9 @@ def check_version_compatibility(ctx: typer.Context) -> None:
 
     reinstall_command = f'pipx install --force "git+{release["repo_url"]}@{release["version"]}"'
     if required > installed:
-        reason = f"This server requires eliude-cli {required}, but you have {installed} installed."
+        reason = t("version.requires_newer", required=required, installed=installed)
     else:
-        reason = f"This server expects an older eliude-cli ({required}); you have {installed} installed."
+        reason = t("version.requires_older", required=required, installed=installed)
 
     typer.secho(reason, fg=typer.colors.RED)
     typer.echo(f"\n  {reinstall_command}\n")

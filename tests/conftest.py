@@ -27,3 +27,17 @@ def _stub_server_health(monkeypatch):
     # not concerned with that behavior don't make a real network call.
     # Tests exercising it directly can still override via monkeypatch.
     monkeypatch.setattr(ApiClient, "get_health", lambda self: {"status": "ok", "version": "0.0.0-test"})
+
+
+@pytest.fixture(autouse=True)
+def _default_to_english(monkeypatch):
+    # Message-string assertions throughout the suite are written in English.
+    # Without this, get_language() would fall through to the real host's
+    # LANG/LC_ALL, making test results depend on the machine running them.
+    # Clears env vars rather than stubbing get_language() itself, so tests
+    # exercising language detection/switching can still monkeypatch these
+    # same env vars locally and exercise the real function.
+    monkeypatch.delenv("ELIUDE_LANGUAGE", raising=False)
+    monkeypatch.delenv("LC_ALL", raising=False)
+    monkeypatch.delenv("LC_MESSAGES", raising=False)
+    monkeypatch.delenv("LANG", raising=False)

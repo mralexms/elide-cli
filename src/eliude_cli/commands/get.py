@@ -3,6 +3,7 @@ from pathlib import Path
 import typer
 
 from ..client import ApiError
+from ..messages import t
 from ..session import require_practice_client
 
 
@@ -27,9 +28,9 @@ def get(
 
     target = Path(f"{slug}.c")
     if target.exists() and not overwrite:
-        typer.echo(f"File '{target}' already exists.")
-        if not typer.confirm("Overwrite it?", default=False):
-            target = Path(typer.prompt("Enter a filename to save as instead"))
+        typer.echo(t("get.file_exists", target=target))
+        if not typer.confirm(t("get.overwrite_prompt"), default=False):
+            target = Path(typer.prompt(t("get.enter_filename_prompt")))
 
     target.write_text(submission["source_code"])
-    typer.secho(f"Saved latest submission for '{slug}' to {target}.", fg=typer.colors.GREEN)
+    typer.secho(t("get.saved", slug=slug, target=target), fg=typer.colors.GREEN)

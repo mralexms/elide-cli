@@ -4,6 +4,7 @@ import typer
 
 from .. import config
 from ..client import ApiError
+from ..messages import t
 from ..session import require_client
 
 
@@ -18,7 +19,7 @@ def _fetch_classrooms() -> list[dict]:
 
 def _print_classrooms(classrooms: list[dict]) -> None:
     if not classrooms:
-        typer.echo("You are not enrolled in any classrooms yet.")
+        typer.echo(t("classrooms.none_enrolled"))
         raise typer.Exit(code=1)
     current = config.get_active_classroom()
     for c in classrooms:
@@ -41,9 +42,9 @@ def switch(slug: Optional[str] = typer.Argument(None, help="Classroom slug to sw
 
     match = next((c for c in classrooms if c["slug"] == slug), None)
     if match is None:
-        typer.secho(f"You are not enrolled in classroom '{slug}'.", fg=typer.colors.RED)
+        typer.secho(t("classrooms.not_enrolled_in", slug=slug), fg=typer.colors.RED)
         raise typer.Exit(code=1)
 
     config.set_active_classroom(slug)
     config.clear_active_practice()
-    typer.secho(f"Switched to classroom '{match['name']}' ({slug}).", fg=typer.colors.GREEN)
+    typer.secho(t("classrooms.switched", name=match["name"], slug=slug), fg=typer.colors.GREEN)

@@ -4,6 +4,7 @@ import typer
 
 from .. import config
 from ..client import ApiError
+from ..messages import t
 from ..session import require_classroom_client
 
 _WINDOW_COLORS = {
@@ -24,13 +25,17 @@ def _fetch_practices() -> list[dict]:
 
 def _print_practices(practices: list[dict]) -> None:
     if not practices:
-        typer.echo("This classroom has no practices yet.")
+        typer.echo(t("practices.none_yet"))
         raise typer.Exit(code=1)
     current = config.get_active_practice()
     for p in practices:
         marker = "*" if p["slug"] == current else " "
         window_label = typer.style(f"{p['window_status']:<9}", fg=_WINDOW_COLORS.get(p["window_status"]))
-        timed_label = f"timed {p['duration_minutes']}min" if p["is_timed"] else "no time limit"
+        timed_label = (
+            t("practices.timed_label", minutes=p["duration_minutes"])
+            if p["is_timed"]
+            else t("practices.no_time_limit")
+        )
         typer.echo(f"{marker} {p['slug']:<25} {window_label} [{timed_label}] {p['title']}")
 
 
@@ -49,7 +54,7 @@ def switch(slug: Optional[str] = typer.Argument(None, help="Practice slug to swi
 
     match = next((p for p in practices if p["slug"] == slug), None)
     if match is None:
-        typer.secho(f"No practice '{slug}' in the active classroom.", fg=typer.colors.RED)
+        typer.secho(t("practices.not_found", slug=slug), fg=typer.colors.RED)
         raise typer.Exit(code=1)
 
     client = require_classroom_client()
@@ -60,8 +65,8 @@ def switch(slug: Optional[str] = typer.Argument(None, help="Practice slug to swi
         raise typer.Exit(code=1)
 
     config.set_active_practice(slug)
-    typer.secho(f"Using practice '{match['title']}' ({slug}).", fg=typer.colors.GREEN)
+    typer.secho(t("practices.using", title=match["title"], slug=slug), fg=typer.colors.GREEN)
 
     attempt = result.get("attempt")
     if attempt:
-        typer.secho(f"Time limit: ends at {attempt['ends_at']}", fg=typer.colors.YELLOW)
+        typer.secho(t("practices.time_limit_ends", ends_at=attempt["ends_at"]), fg=typer.colors.YELLOW)

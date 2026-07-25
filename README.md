@@ -28,6 +28,17 @@ eliude signup
 
 Prompts for full name, email, password (twice, to confirm), and the classroom code. On success you're logged in and switched into that classroom automatically.
 
+## Language
+
+The CLI's own messages (not exercise content, which comes from the server as-is) are available in English and Portuguese (`pt-BR`). By default it follows your system locale (`LANG`/`LC_ALL`/`LC_MESSAGES`), falling back to English if that can't be determined. Override explicitly:
+
+```bash
+eliude config set-language pt-BR
+eliude config set-language en
+```
+
+`ELIUDE_LANGUAGE` (an environment variable) takes priority over both the system locale and the saved setting, if set.
+
 ## Version compatibility
 
 Every time you run a command, the CLI checks that its version matches exactly what your configured server declares as compatible. If it doesn't match — either direction — the command is refused and the CLI prints the exact command to reinstall the right version, e.g.:

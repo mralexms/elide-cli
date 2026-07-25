@@ -87,6 +87,7 @@ app.add_typer(submissions_app, name="submissions")
 
 config_app = typer.Typer(help="CLI configuration", cls=HelpOnInvalidCommandGroup)
 config_app.command("set-url")(config_cmd.set_url)
+config_app.command("set-language")(config_cmd.set_language)
 app.add_typer(config_app, name="config")
 
 

@@ -2,6 +2,7 @@ import typer
 
 from .. import config
 from ..client import ApiClient, ApiError
+from ..messages import t
 from ..session import anonymous_client, require_client
 
 
@@ -10,9 +11,11 @@ def _print_server_status() -> None:
     try:
         health = anonymous_client().get_health()
     except ApiError as e:
-        typer.secho(f"Server: {base_url} — unreachable ({e})", fg=typer.colors.RED)
+        typer.secho(t("status.server_unreachable", url=base_url, error=e), fg=typer.colors.RED)
         return
-    typer.secho(f"Server: {base_url} (v{health.get('version', '?')}, reachable)", fg=typer.colors.GREEN)
+    typer.secho(
+        t("status.server_reachable", url=base_url, version=health.get("version", "?")), fg=typer.colors.GREEN
+    )
 
 
 def _fetch_practices(classroom_slug: str) -> list[dict]:
@@ -32,10 +35,10 @@ def _print_stats(questions: list[dict], indent: str = "") -> None:
     passed = sum(1 for q in questions if q.get("status") == "success")
     failed = sum(1 for q in questions if q.get("status") == "failure")
     score = (passed / total * 100) if total else 0.0
-    typer.echo(f"{indent}Questions: {total}")
-    typer.secho(f"{indent}Passed: {passed}", fg=typer.colors.GREEN)
-    typer.secho(f"{indent}Failed: {failed}", fg=typer.colors.RED)
-    typer.echo(f"{indent}Score: {score:.1f}% ({passed}/{total})")
+    typer.echo(f"{indent}{t('status.questions_label', total=total)}")
+    typer.secho(f"{indent}{t('status.passed_label', passed=passed)}", fg=typer.colors.GREEN)
+    typer.secho(f"{indent}{t('status.failed_label', failed=failed)}", fg=typer.colors.RED)
+    typer.echo(f"{indent}{t('status.score_label', score=f'{score:.1f}', passed=passed, total=total)}")
 
 
 def status(
@@ -47,7 +50,7 @@ def status(
     _print_server_status()
 
     client = require_client()
-    typer.echo(f"Logged in as: {config.get_username()}")
+    typer.echo(t("status.logged_in_as", username=config.get_username()))
 
     try:
         classrooms = client.list_classrooms()
@@ -59,7 +62,7 @@ def status(
 
     if all_classrooms:
         if not classrooms:
-            typer.echo("You are not enrolled in any classrooms yet.")
+            typer.echo(t("classrooms.none_enrolled"))
             return
         for i, c in enumerate(classrooms):
             if i > 0:
@@ -72,7 +75,7 @@ def status(
                 typer.secho(f"    {e}", fg=typer.colors.RED)
                 continue
             if not practices:
-                typer.echo("    No practices yet.")
+                typer.echo(f"    {t('status.no_practices_yet')}")
                 continue
             for practice in practices:
                 typer.echo(f"    {practice['title']} ({practice['slug']})")
@@ -85,20 +88,20 @@ def status(
         return
 
     if active_classroom_slug is None:
-        typer.secho("No active classroom set. Run `eliude switch` first.", fg=typer.colors.RED)
+        typer.secho(t("session.no_active_classroom"), fg=typer.colors.RED)
         raise typer.Exit(code=1)
     match = next((c for c in classrooms if c["slug"] == active_classroom_slug), None)
     if match is None:
-        typer.secho(f"You are not enrolled in classroom '{active_classroom_slug}'.", fg=typer.colors.RED)
+        typer.secho(t("classrooms.not_enrolled_in", slug=active_classroom_slug), fg=typer.colors.RED)
         raise typer.Exit(code=1)
 
     active_practice_slug = config.get_active_practice()
     if active_practice_slug is None:
-        typer.secho("No active practice set. Run `eliude practices switch` first.", fg=typer.colors.RED)
+        typer.secho(t("session.no_active_practice"), fg=typer.colors.RED)
         raise typer.Exit(code=1)
 
-    typer.echo(f"Classroom: {match['name']} ({match['slug']})")
-    typer.echo(f"Practice: {active_practice_slug}")
+    typer.echo(t("status.classroom_label", name=match["name"], slug=match["slug"]))
+    typer.echo(t("status.practice_label", slug=active_practice_slug))
     try:
         questions = _fetch_questions(active_classroom_slug, active_practice_slug)
     except ApiError as e:

@@ -2,6 +2,7 @@ import typer
 
 from .. import config
 from ..client import ApiError
+from ..messages import t
 from ..session import anonymous_client
 
 
@@ -14,7 +15,7 @@ def signup(
 ) -> None:
     """Self-register as a student using a classroom join code, and log in."""
     if password != password_confirm:
-        typer.secho("Passwords don't match.", fg=typer.colors.RED)
+        typer.secho(t("signup.passwords_mismatch"), fg=typer.colors.RED)
         raise typer.Exit(code=1)
 
     client = anonymous_client()
@@ -29,5 +30,6 @@ def signup(
     config.set_active_classroom(classroom["slug"])
     config.clear_active_practice()
     typer.secho(
-        f"Welcome, {name}! Joined classroom '{classroom['name']}' ({classroom['slug']}).", fg=typer.colors.GREEN
+        t("signup.welcome", name=name, classroom_name=classroom["name"], classroom_slug=classroom["slug"]),
+        fg=typer.colors.GREEN,
     )

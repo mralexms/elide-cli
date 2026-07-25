@@ -5,6 +5,7 @@ from rich.console import Console
 
 from ..client import ApiError
 from ..formatting import print_submission_result
+from ..messages import t
 from ..session import require_practice_client
 
 
@@ -13,7 +14,7 @@ def submit(slug: str, file: Path = typer.Argument(..., exists=True, readable=Tru
     client = require_practice_client()
     source_code = file.read_text()
     try:
-        with Console().status("Grading your submission...", spinner="dots"):
+        with Console().status(t("submit.grading"), spinner="dots"):
             result = client.submit(slug, source_code)
     except ApiError as e:
         typer.secho(str(e), fg=typer.colors.RED)
