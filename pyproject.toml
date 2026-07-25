@@ -1,6 +1,6 @@
 [project]
 name = "eliude-cli"
-version = "0.3.4"
+version = "0.3.5"
 description = "CLI for the Eliude C programming judge"
 requires-python = ">=3.9"
 dependencies = [
