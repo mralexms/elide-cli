@@ -32,7 +32,7 @@ def list_classrooms() -> None:
     _print_classrooms(_fetch_classrooms())
 
 
-def switch(slug: Optional[str] = typer.Argument(None, help="Classroom slug to switch to")) -> None:
+def switch(slug: Optional[str] = typer.Argument(None, help=t("help.arg.classrooms_switch_slug"))) -> None:
     """Switch the active classroom, or list the classrooms you belong to."""
     classrooms = _fetch_classrooms()
 

@@ -44,7 +44,7 @@ def list_practices() -> None:
     _print_practices(_fetch_practices())
 
 
-def switch(slug: Optional[str] = typer.Argument(None, help="Practice slug to switch to")) -> None:
+def switch(slug: Optional[str] = typer.Argument(None, help=t("help.arg.practices_switch_slug"))) -> None:
     """Switch the active practice, or list the practices available in the active classroom."""
     practices = _fetch_practices()
 

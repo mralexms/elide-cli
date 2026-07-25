@@ -42,9 +42,7 @@ def _print_stats(questions: list[dict], indent: str = "") -> None:
 
 
 def status(
-    all_classrooms: bool = typer.Option(
-        False, "--all", help="Show stats for every practice in every classroom you belong to"
-    ),
+    all_classrooms: bool = typer.Option(False, "--all", help=t("help.opt.status_all")),
 ) -> None:
     """Show your login, active classroom/practice, and question stats."""
     _print_server_status()

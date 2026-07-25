@@ -15,13 +15,9 @@ _STATUS_COLORS = {
 
 
 def list_questions(
-    show_timestamp: bool = typer.Option(
-        False, "--show-timestamp", help="Also show when you last submitted each question"
-    ),
-    unsolved: bool = typer.Option(
-        False, "--unsolved", help="Only show questions you haven't passed yet (never submitted or failing)"
-    ),
-    tag: str = typer.Option(None, "--tag", help="Only show questions with this tag (e.g. vetores)"),
+    show_timestamp: bool = typer.Option(False, "--show-timestamp", help=t("help.opt.questions_show_timestamp")),
+    unsolved: bool = typer.Option(False, "--unsolved", help=t("help.opt.questions_unsolved")),
+    tag: str = typer.Option(None, "--tag", help=t("help.opt.questions_tag")),
 ) -> None:
     """List the active practice's questions."""
     client = require_practice_client()
@@ -73,18 +69,10 @@ def _format_caption(question: dict, classroom: str, practice: str, slug: str) ->
 
 def show_question(
     slug: str,
-    download: bool = typer.Option(
-        False, "--download", help="Also save the first sample test case as <slug>_input.txt / <slug>_output.txt"
-    ),
-    caption: bool = typer.Option(
-        False, "--caption", help="Show only the title/statement, formatted as a C comment block"
-    ),
-    input_sample: bool = typer.Option(
-        False, "--input-sample", help="Show only the first sample test case's input"
-    ),
-    output_sample: bool = typer.Option(
-        False, "--output-sample", help="Show only the first sample test case's expected output"
-    ),
+    download: bool = typer.Option(False, "--download", help=t("help.opt.show_download")),
+    caption: bool = typer.Option(False, "--caption", help=t("help.opt.show_caption")),
+    input_sample: bool = typer.Option(False, "--input-sample", help=t("help.opt.show_input_sample")),
+    output_sample: bool = typer.Option(False, "--output-sample", help=t("help.opt.show_output_sample")),
 ) -> None:
     """Show a question's statement and sample test cases."""
     if sum([caption, input_sample, output_sample]) > 1:

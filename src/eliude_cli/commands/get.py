@@ -9,10 +9,8 @@ from ..session import require_practice_client
 
 def get(
     slug: str,
-    save: bool = typer.Option(False, "--save", help="Save to <slug>.c instead of printing to stdout"),
-    overwrite: bool = typer.Option(
-        False, "--overwrite", help="With --save, overwrite the destination file without prompting"
-    ),
+    save: bool = typer.Option(False, "--save", help=t("help.opt.get_save")),
+    overwrite: bool = typer.Option(False, "--overwrite", help=t("help.opt.get_overwrite")),
 ) -> None:
     """Show your latest submission for a question in the active practice."""
     client = require_practice_client()

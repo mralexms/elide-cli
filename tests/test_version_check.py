@@ -8,8 +8,9 @@ RELEASE = {"version": "0.2.0", "repo_url": "https://github.com/mralexms/elide-cl
 
 
 class FakeContext:
-    def __init__(self, invoked_subcommand):
+    def __init__(self, invoked_subcommand, help_requested=False):
         self.invoked_subcommand = invoked_subcommand
+        self.meta = {"eliude_help_requested": True} if help_requested else {}
 
 
 def test_exempt_subcommand_skips_the_check(cli_config, monkeypatch):
@@ -23,6 +24,13 @@ def test_bare_invocation_skips_the_check(cli_config, monkeypatch):
     calls = []
     monkeypatch.setattr(ApiClient, "get_latest_release", lambda self: calls.append(1))
     version_check.check_version_compatibility(FakeContext(None))
+    assert calls == []
+
+
+def test_help_requested_skips_the_check(cli_config, monkeypatch):
+    calls = []
+    monkeypatch.setattr(ApiClient, "get_latest_release", lambda self: calls.append(1))
+    version_check.check_version_compatibility(FakeContext("submit", help_requested=True))
     assert calls == []
 
 

@@ -49,6 +49,28 @@ def test_incompatible_version_does_not_block_config(cli_config, monkeypatch):
     assert result.exit_code == 0
 
 
+def test_incompatible_version_does_not_block_a_subcommands_help(cli_config, monkeypatch):
+    monkeypatch.setattr(main_module, "check_version_compatibility", version_check.check_version_compatibility)
+    monkeypatch.setattr(
+        ApiClient, "get_latest_release", lambda self: {"version": "999.0.0", "repo_url": "https://x"}
+    )
+    result = runner.invoke(app, ["classrooms", "--help"])
+    assert result.exit_code == 0
+    assert "requires eliude-cli" not in result.output
+    assert "Usage: eliude classrooms" in result.output
+
+
+def test_incompatible_version_does_not_block_a_nested_subcommands_help(cli_config, monkeypatch):
+    monkeypatch.setattr(main_module, "check_version_compatibility", version_check.check_version_compatibility)
+    monkeypatch.setattr(
+        ApiClient, "get_latest_release", lambda self: {"version": "999.0.0", "repo_url": "https://x"}
+    )
+    result = runner.invoke(app, ["questions", "show", "--help"])
+    assert result.exit_code == 0
+    assert "requires eliude-cli" not in result.output
+    assert "Usage: eliude questions show" in result.output
+
+
 def test_invalid_top_level_command_shows_root_help_not_generic_error(cli_config):
     result = runner.invoke(app, ["foobar"])
     assert result.exit_code == 2

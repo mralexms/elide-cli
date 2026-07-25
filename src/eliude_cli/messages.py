@@ -80,6 +80,52 @@ _MESSAGES = {
         "status.no_practices_yet": "No practices yet.",
         "status.classroom_label": "Classroom: {name} ({slug})",
         "status.practice_label": "Practice: {slug}",
+        # main.py — help text (group/command descriptions, --version)
+        "help.root": "CLI for the Eliude C programming judge",
+        "help.group.classrooms": "Manage your classrooms",
+        "help.group.practices": "Manage practices in the active classroom",
+        "help.group.questions": "Browse the active practice's questions",
+        "help.group.submissions": "Check submission results",
+        "help.group.config": "CLI configuration",
+        "help.opt.version": "Show the version and exit.",
+        "help.cmd.login": "Log in and store an auth token locally.",
+        "help.cmd.logout": "Clear the locally stored auth token.",
+        "help.cmd.signup": "Self-register as a student using a classroom join code, and log in.",
+        "help.cmd.submit": "Submit a C solution for a question in the active practice.",
+        "help.cmd.switch": "Switch the active classroom, or list the classrooms you belong to.",
+        "help.cmd.get": "Show your latest submission for a question in the active practice.",
+        "help.cmd.status": "Show your login, active classroom/practice, and question stats.",
+        "help.cmd.show": "Show a question's statement and sample test cases.",
+        "help.cmd.classrooms_list": "List the classrooms you belong to, marking the active one.",
+        "help.cmd.practices_list": "List the practices available in the active classroom, marking the active one.",
+        "help.cmd.practices_switch": (
+            "Switch the active practice, or list the practices available in the active classroom."
+        ),
+        "help.cmd.questions_list": "List the active practice's questions.",
+        "help.cmd.submissions_status": "Check the status/result of a previous submission.",
+        "help.cmd.config_set_url": "Point the CLI at a different Eliude backend.",
+        "help.cmd.config_set_language": "Set the language eliude's messages are shown in.",
+        # commands/get.py — option help
+        "help.opt.get_save": "Save to <slug>.c instead of printing to stdout",
+        "help.opt.get_overwrite": "With --save, overwrite the destination file without prompting",
+        # commands/questions.py — option/argument help
+        "help.opt.questions_show_timestamp": "Also show when you last submitted each question",
+        "help.opt.questions_unsolved": "Only show questions you haven't passed yet (never submitted or failing)",
+        "help.opt.questions_tag": "Only show questions with this tag (e.g. vetores)",
+        "help.opt.show_download": (
+            "Also save the first sample test case as <slug>_input.txt / <slug>_output.txt"
+        ),
+        "help.opt.show_caption": "Show only the title/statement, formatted as a C comment block",
+        "help.opt.show_input_sample": "Show only the first sample test case's input",
+        "help.opt.show_output_sample": "Show only the first sample test case's expected output",
+        # commands/practices.py — argument help
+        "help.arg.practices_switch_slug": "Practice slug to switch to",
+        # commands/classrooms.py — argument help
+        "help.arg.classrooms_switch_slug": "Classroom slug to switch to",
+        # commands/status.py — option help
+        "help.opt.status_all": "Show stats for every practice in every classroom you belong to",
+        # commands/config_cmd.py — argument help
+        "help.arg.config_set_language": "Language code, e.g. en or pt-BR",
     },
     "pt-BR": {
         # session.py
@@ -163,6 +209,52 @@ _MESSAGES = {
         "status.no_practices_yet": "Nenhuma practice ainda.",
         "status.classroom_label": "Turma: {name} ({slug})",
         "status.practice_label": "Practice: {slug}",
+        # main.py — help text (group/command descriptions, --version)
+        "help.root": "CLI para o corretor de exercícios de C Eliude",
+        "help.group.classrooms": "Gerencie suas turmas",
+        "help.group.practices": "Gerencie as practices da turma ativa",
+        "help.group.questions": "Navegue pelas questões da practice ativa",
+        "help.group.submissions": "Consulte o resultado de submissões",
+        "help.group.config": "Configuração do CLI",
+        "help.opt.version": "Mostra a versão e sai.",
+        "help.cmd.login": "Faz login e salva um token de autenticação localmente.",
+        "help.cmd.logout": "Apaga o token de autenticação salvo localmente.",
+        "help.cmd.signup": "Auto-cadastro de aluno usando o código de uma turma, e já faz login.",
+        "help.cmd.submit": "Envia uma solução em C para uma questão da practice ativa.",
+        "help.cmd.switch": "Troca a turma ativa, ou lista as turmas em que você está matriculado.",
+        "help.cmd.get": "Mostra sua última submissão de uma questão na practice ativa.",
+        "help.cmd.status": "Mostra login, turma/practice ativa e estatísticas das questões.",
+        "help.cmd.show": "Mostra o enunciado e os casos de teste de amostra de uma questão.",
+        "help.cmd.classrooms_list": "Lista as turmas em que você está matriculado, marcando a ativa.",
+        "help.cmd.practices_list": "Lista as practices disponíveis na turma ativa, marcando a ativa.",
+        "help.cmd.practices_switch": (
+            "Troca a practice ativa, ou lista as practices disponíveis na turma ativa."
+        ),
+        "help.cmd.questions_list": "Lista as questões da practice ativa.",
+        "help.cmd.submissions_status": "Consulta o status/resultado de uma submissão anterior.",
+        "help.cmd.config_set_url": "Aponta o CLI para um backend Eliude diferente.",
+        "help.cmd.config_set_language": "Define o idioma em que as mensagens do eliude são mostradas.",
+        # commands/get.py — option help
+        "help.opt.get_save": "Salva em <slug>.c em vez de mostrar no terminal",
+        "help.opt.get_overwrite": "Com --save, sobrescreve o arquivo de destino sem perguntar",
+        # commands/questions.py — option/argument help
+        "help.opt.questions_show_timestamp": "Também mostra quando você submeteu cada questão pela última vez",
+        "help.opt.questions_unsolved": "Mostra só questões que você ainda não passou (nunca enviada ou reprovada)",
+        "help.opt.questions_tag": "Mostra só questões com essa tag (ex. vetores)",
+        "help.opt.show_download": (
+            "Também salva o primeiro caso de teste de amostra como <slug>_input.txt / <slug>_output.txt"
+        ),
+        "help.opt.show_caption": "Mostra só o título/enunciado, formatado como um comentário de bloco C",
+        "help.opt.show_input_sample": "Mostra só o input do primeiro caso de teste de amostra",
+        "help.opt.show_output_sample": "Mostra só a saída esperada do primeiro caso de teste de amostra",
+        # commands/practices.py — argument help
+        "help.arg.practices_switch_slug": "Slug da practice para trocar",
+        # commands/classrooms.py — argument help
+        "help.arg.classrooms_switch_slug": "Slug da turma para trocar",
+        # commands/status.py — option help
+        "help.opt.status_all": "Mostra estatísticas de cada practice em cada turma em que você está matriculado",
+        # commands/config_cmd.py — argument help
+        "help.arg.config_set_language": "Código do idioma, ex. en ou pt-BR",
     },
 }
 

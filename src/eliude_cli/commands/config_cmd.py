@@ -11,7 +11,7 @@ def set_url(base_url: str) -> None:
 
 
 def set_language(
-    language: str = typer.Argument(..., help="Language code, e.g. en or pt-BR"),
+    language: str = typer.Argument(..., help=t("help.arg.config_set_language")),
 ) -> None:
     """Set the language eliude's messages are shown in."""
     resolved = config.resolve_language_alias(language)

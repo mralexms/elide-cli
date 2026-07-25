@@ -24,8 +24,14 @@ def check_version_compatibility(ctx: typer.Context) -> None:
     can't be completed — server unreachable, no release published, or a
     malformed version — since those are infra problems, not confirmed
     incompatibility, and must never brick the CLI.
+
+    Also skipped whenever `--help` was requested anywhere in the command
+    line (see HelpOnInvalidCommandGroup.resolve_command in main.py) —
+    --help must never depend on network access, at any nesting depth.
     """
     if ctx.invoked_subcommand is None or ctx.invoked_subcommand in EXEMPT_SUBCOMMANDS:
+        return
+    if ctx.meta.get("eliude_help_requested"):
         return
 
     try:
