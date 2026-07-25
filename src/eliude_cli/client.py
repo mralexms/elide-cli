@@ -53,6 +53,16 @@ class ApiClient:
         response = self._request("POST", "/api/auth/login/", data={"username": username, "password": password})
         return response.json()["token"]
 
+    def signup(self, name: str, email: str, password: str, password_confirm: str, classroom_code: str) -> dict:
+        payload = {
+            "name": name,
+            "email": email,
+            "password": password,
+            "password_confirm": password_confirm,
+            "classroom_code": classroom_code,
+        }
+        return self._request("POST", "/api/auth/signup/", json=payload).json()
+
     def logout(self) -> None:
         self._request("POST", "/api/auth/logout/")
 

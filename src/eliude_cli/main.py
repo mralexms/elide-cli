@@ -2,7 +2,7 @@ import typer
 from typer.core import TyperGroup
 
 from . import __version__
-from .commands import classrooms, config_cmd, get, login, practices, questions, status, submissions, submit
+from .commands import classrooms, config_cmd, get, login, practices, questions, signup, status, submissions, submit
 from .version_check import check_version_compatibility
 
 
@@ -42,6 +42,7 @@ def main_callback(
 
 app.command(name="login")(login.login)
 app.command(name="logout")(login.logout)
+app.command(name="signup")(signup.signup)
 app.command(name="submit")(submit.submit)
 app.command(name="switch")(classrooms.switch)
 app.command(name="get")(get.get)

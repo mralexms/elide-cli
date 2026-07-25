@@ -16,6 +16,17 @@ CLI for the Eliude C programming judge.
    ```bash
    eliude config set-url http://<your-eliude-host>
    ```
+4. If you're a student, either `eliude login` with credentials your teacher gave you, or self-register with a classroom join code (see below).
+
+## Student self-signup
+
+A teacher can share a classroom's join code (shown on that classroom's page in the teacher portal). Any student can then join without an account being created for them first:
+
+```bash
+eliude signup
+```
+
+Prompts for full name, email, password (twice, to confirm), and the classroom code. On success you're logged in and switched into that classroom automatically.
 
 ## Version compatibility
 
