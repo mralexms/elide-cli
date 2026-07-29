@@ -47,6 +47,9 @@ _MESSAGES = {
         # commands/login.py
         "login.logged_in_as": "Logged in as {username}.",
         "login.logged_out": "Logged out.",
+        # commands/change_password.py
+        "change_password.mismatch": "Passwords don't match.",
+        "change_password.success": "Password changed.",
         # commands/classrooms.py
         "classrooms.none_enrolled": "You are not enrolled in any classrooms yet.",
         "classrooms.not_enrolled_in": "You are not enrolled in classroom '{slug}'.",
@@ -90,6 +93,7 @@ _MESSAGES = {
         "help.opt.version": "Show the version and exit.",
         "help.cmd.login": "Log in and store an auth token locally.",
         "help.cmd.logout": "Clear the locally stored auth token.",
+        "help.cmd.change_password": "Set a new password — required if you're still on a temporary one your teacher set.",
         "help.cmd.signup": "Self-register as a student using a classroom join code, and log in.",
         "help.cmd.submit": "Submit a C solution for a question in the active practice.",
         "help.cmd.switch": "Switch the active classroom, or list the classrooms you belong to.",
@@ -176,6 +180,9 @@ _MESSAGES = {
         # commands/login.py
         "login.logged_in_as": "Logado como {username}.",
         "login.logged_out": "Sessão encerrada.",
+        # commands/change_password.py
+        "change_password.mismatch": "As senhas não coincidem.",
+        "change_password.success": "Senha alterada.",
         # commands/classrooms.py
         "classrooms.none_enrolled": "Você ainda não está matriculado em nenhuma turma.",
         "classrooms.not_enrolled_in": "Você não está matriculado na turma '{slug}'.",
@@ -219,6 +226,7 @@ _MESSAGES = {
         "help.opt.version": "Mostra a versão e sai.",
         "help.cmd.login": "Faz login e salva um token de autenticação localmente.",
         "help.cmd.logout": "Apaga o token de autenticação salvo localmente.",
+        "help.cmd.change_password": "Define uma nova senha — obrigatório se você ainda está com a senha temporária que seu professor definiu.",
         "help.cmd.signup": "Auto-cadastro de aluno usando o código de uma turma, e já faz login.",
         "help.cmd.submit": "Envia uma solução em C para uma questão da practice ativa.",
         "help.cmd.switch": "Troca a turma ativa, ou lista as turmas em que você está matriculado.",

@@ -66,6 +66,14 @@ class ApiClient:
     def logout(self) -> None:
         self._request("POST", "/api/auth/logout/")
 
+    def change_password(self, current_password: str, new_password: str, new_password_confirm: str) -> None:
+        payload = {
+            "current_password": current_password,
+            "new_password": new_password,
+            "new_password_confirm": new_password_confirm,
+        }
+        self._request("POST", "/api/auth/change-password/", json=payload)
+
     def list_questions(self, tag: str | None = None) -> list[dict]:
         params = {"tag": tag} if tag else None
         return self._request("GET", "/api/practice-questions/", params=params).json()

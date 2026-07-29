@@ -2,7 +2,19 @@ import typer
 from typer.core import TyperGroup
 
 from . import __version__
-from .commands import classrooms, config_cmd, get, login, practices, questions, signup, status, submissions, submit
+from .commands import (
+    change_password,
+    classrooms,
+    config_cmd,
+    get,
+    login,
+    practices,
+    questions,
+    signup,
+    status,
+    submissions,
+    submit,
+)
 from .messages import t
 from .version_check import check_version_compatibility
 
@@ -52,6 +64,7 @@ def main_callback(
 
 app.command(name="login", help=t("help.cmd.login"))(login.login)
 app.command(name="logout", help=t("help.cmd.logout"))(login.logout)
+app.command(name="change-password", help=t("help.cmd.change_password"))(change_password.change_password)
 app.command(name="signup", help=t("help.cmd.signup"))(signup.signup)
 app.command(name="submit", help=t("help.cmd.submit"))(submit.submit)
 app.command(name="switch", help=t("help.cmd.switch"))(classrooms.switch)
