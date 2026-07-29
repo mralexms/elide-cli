@@ -18,6 +18,26 @@ CLI for the Eliude C programming judge.
    ```
 4. If you're a student, either `eliude login` with credentials your teacher gave you, or self-register with a classroom join code (see below).
 
+## Trying it in an ephemeral container
+
+No install, nothing touches your machine: `Dockerfile.try` builds a throwaway image with the CLI (installed via pipx from this repo, same as above) plus `git`, `nano`/`vim`, and `gcc` — enough to write and locally compile a solution before `eliude submit` sends it off.
+
+```bash
+docker build -f Dockerfile.try -t eliude-cli-try .
+docker run --rm -it eliude-cli-try
+```
+
+`ELIUDE_BASE_URL` defaults to the production server baked into the image. Pointing at a server running on your own machine instead (e.g. local dev)?
+
+```bash
+docker run --rm -it --add-host=host.docker.internal:host-gateway \
+  -e ELIUDE_BASE_URL=http://host.docker.internal:8000 eliude-cli-try
+```
+
+`--add-host` is what makes `host.docker.internal` resolve — a no-op on Docker Desktop (which already does this), needed for the same name to work on Linux.
+
+`exit` the shell and the container (config, login token, any files you created) is gone.
+
 ## Student self-signup
 
 A teacher can share a classroom's join code (shown on that classroom's page in the teacher portal). Any student can then join without an account being created for them first:
