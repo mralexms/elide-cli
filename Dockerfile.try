@@ -1,28 +1,10 @@
-# Ephemeral sandbox for trying the eliude CLI — nothing here touches your
-# machine, and nothing inside the container survives past `exit` (config,
-# login token, any downloaded files all live under / only).
-#
-#   docker build -f Dockerfile.try -t eliude-cli-try .
-#   docker run --rm -it --add-host=host.docker.internal:host-gateway eliude-cli-try
-#
-# --add-host is what makes ELIUDE_BASE_URL's default below reach a server
-# running on your own machine — a no-op on Docker Desktop (which already
-# resolves host.docker.internal), needed for the same name to work on Linux.
-# Talking to a different server instead? Override it: `-e ELIUDE_BASE_URL=https://your-server`.
 FROM python:3.12-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    ELIUDE_BASE_URL=http://host.docker.internal:8000 \
+    ELIUDE_BASE_URL=https://fabrica.ifma.edu.br/eliude \
     PATH="/root/.local/bin:${PATH}"
 
-# git is needed for pip/pipx's "git+https://..." install, not for the CLI
-# itself — installs the same way an end user's README instructions do,
-# from the published repo (not this local checkout), so this always tests
-# what's actually installable, uncommitted local changes or not.
-# nano/vim let you write a solution file inside the container; gcc lets
-# you compile it locally first (matching the sandbox's own compiler) before
-# `eliude submit` sends it off.
 RUN apt-get update \
     && apt-get install --no-install-recommends -y git nano vim gcc \
     && rm -rf /var/lib/apt/lists/* \
