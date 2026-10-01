@@ -2,10 +2,11 @@ from typing import Optional
 
 import typer
 
-from .. import config
+from .. import config, prompts
 from ..client import ApiError
 from ..messages import t
 from ..session import require_client
+from . import practices
 
 
 def _fetch_classrooms() -> list[dict]:
@@ -33,11 +34,16 @@ def list_classrooms() -> None:
 
 
 def switch(slug: Optional[str] = typer.Argument(None, help=t("help.arg.classrooms_switch_slug"))) -> None:
-    """Switch the active classroom, or list the classrooms you belong to."""
+    """Switch the active classroom (and then practice) via an interactive menu, or directly by slug."""
     classrooms = _fetch_classrooms()
 
     if slug is None:
-        _print_classrooms(classrooms)
+        if not prompts.is_interactive():
+            _print_classrooms(classrooms)
+            return
+        match = _choose_classroom(classrooms)
+        _activate(match)
+        practices.choose_practice(practices._fetch_practices())
         return
 
     match = next((c for c in classrooms if c["slug"] == slug), None)
@@ -45,6 +51,33 @@ def switch(slug: Optional[str] = typer.Argument(None, help=t("help.arg.classroom
         typer.secho(t("classrooms.not_enrolled_in", slug=slug), fg=typer.colors.RED)
         raise typer.Exit(code=1)
 
-    config.set_active_classroom(slug)
+    _activate(match)
+
+
+def _choose_classroom(classrooms: list[dict]) -> dict:
+    if not classrooms:
+        typer.echo(t("classrooms.none_enrolled"))
+        raise typer.Exit(code=1)
+    # Nothing to choose — go straight to the practices.
+    if len(classrooms) == 1:
+        return classrooms[0]
+
+    current = config.get_active_classroom()
+    options = [
+        prompts.Option(
+            f"{c['name']} {t('prompt.current')}" if c["slug"] == current else c["name"],
+            value=c["slug"],
+        )
+        for c in classrooms
+    ]
+    slug = prompts.select(t("classrooms.choose"), options, default=current)
+    if slug is None:
+        typer.echo(t("prompt.cancelled"))
+        raise typer.Exit(code=1)
+    return next(c for c in classrooms if c["slug"] == slug)
+
+
+def _activate(classroom: dict) -> None:
+    config.set_active_classroom(classroom["slug"])
     config.clear_active_practice()
-    typer.secho(t("classrooms.switched", name=match["name"], slug=slug), fg=typer.colors.GREEN)
+    typer.secho(t("classrooms.switched", name=classroom["name"], slug=classroom["slug"]), fg=typer.colors.GREEN)

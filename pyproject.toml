@@ -8,6 +8,7 @@ dependencies = [
     "requests>=2.31",
     "packaging>=23",
     "rich>=13",
+    "questionary>=2.0",
 ]
 
 [project.optional-dependencies]

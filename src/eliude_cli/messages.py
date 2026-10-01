@@ -63,6 +63,13 @@ _MESSAGES = {
         "practices.not_found": "No practice '{slug}' in the active classroom.",
         "practices.using": "Using practice '{title}' ({slug}).",
         "practices.time_limit_ends": "Time limit: ends at {ends_at}",
+        "practices.choose": "Choose a practice:",
+        "practices.window_upcoming": "not open yet",
+        "practices.window_closed": "closed",
+        "practices.none_open": "No practice in this classroom is open right now.",
+        "practices.confirm_start_timed": (
+            "'{title}' is timed ({minutes} min) and the clock starts as soon as you select it. Start now?"
+        ),
         # commands/signup.py
         "signup.passwords_mismatch": "Passwords don't match.",
         "signup.welcome": "Welcome, {name}! Joined classroom '{classroom_name}' ({classroom_slug}).",
@@ -76,6 +83,12 @@ _MESSAGES = {
         "classrooms.none_enrolled": "You are not enrolled in any classrooms yet.",
         "classrooms.not_enrolled_in": "You are not enrolled in classroom '{slug}'.",
         "classrooms.switched": "Switched to classroom '{name}' ({slug}).",
+        "classrooms.choose": "Choose a classroom:",
+        # prompts.py
+        "prompt.select_instruction": "(arrow keys or number, then Enter)",
+        "prompt.select_instruction_arrows": "(arrow keys, then Enter)",
+        "prompt.current": "(current)",
+        "prompt.cancelled": "Cancelled.",
         # commands/questions.py
         "questions.no_questions": "No questions available.",
         "questions.last_submitted": "last submitted: {timestamp}",
@@ -118,14 +131,16 @@ _MESSAGES = {
         "help.cmd.change_password": "Set a new password — required if you're still on a temporary one your teacher set.",
         "help.cmd.signup": "Self-register as a student using a classroom join code, and log in.",
         "help.cmd.submit": "Submit a C solution for a question in the active practice.",
-        "help.cmd.switch": "Switch the active classroom, or list the classrooms you belong to.",
+        "help.cmd.switch": (
+            "Choose the active classroom and then practice from a menu, or switch directly to a classroom slug."
+        ),
         "help.cmd.get": "Show your latest submission for a question in the active practice.",
         "help.cmd.status": "Show your login, active classroom/practice, and question stats.",
         "help.cmd.show": "Show a question's statement and sample test cases.",
         "help.cmd.classrooms_list": "List the classrooms you belong to, marking the active one.",
         "help.cmd.practices_list": "List the practices available in the active classroom, marking the active one.",
         "help.cmd.practices_switch": (
-            "Switch the active practice, or list the practices available in the active classroom."
+            "Choose the active practice from a menu, or switch directly to a practice slug."
         ),
         "help.cmd.questions_list": "List the active practice's questions.",
         "help.cmd.submissions_status": "Check the status/result of a previous submission.",
@@ -218,6 +233,13 @@ _MESSAGES = {
         "practices.not_found": "Nenhuma practice '{slug}' na turma ativa.",
         "practices.using": "Usando a practice '{title}' ({slug}).",
         "practices.time_limit_ends": "Prazo: termina às {ends_at}",
+        "practices.choose": "Escolha a practice:",
+        "practices.window_upcoming": "ainda não abriu",
+        "practices.window_closed": "encerrada",
+        "practices.none_open": "Nenhuma practice desta turma está aberta agora.",
+        "practices.confirm_start_timed": (
+            "'{title}' tem tempo ({minutes} min) e o cronômetro começa assim que você selecionar. Começar agora?"
+        ),
         # commands/signup.py
         "signup.passwords_mismatch": "As senhas não coincidem.",
         "signup.welcome": "Bem-vindo(a), {name}! Você entrou na turma '{classroom_name}' ({classroom_slug}).",
@@ -231,6 +253,12 @@ _MESSAGES = {
         "classrooms.none_enrolled": "Você ainda não está matriculado em nenhuma turma.",
         "classrooms.not_enrolled_in": "Você não está matriculado na turma '{slug}'.",
         "classrooms.switched": "Trocado para a turma '{name}' ({slug}).",
+        "classrooms.choose": "Escolha a turma:",
+        # prompts.py
+        "prompt.select_instruction": "(setas ou número, depois Enter)",
+        "prompt.select_instruction_arrows": "(setas, depois Enter)",
+        "prompt.current": "(atual)",
+        "prompt.cancelled": "Cancelado.",
         # commands/questions.py
         "questions.no_questions": "Nenhuma questão disponível.",
         "questions.last_submitted": "última submissão: {timestamp}",
@@ -273,14 +301,16 @@ _MESSAGES = {
         "help.cmd.change_password": "Define uma nova senha — obrigatório se você ainda está com a senha temporária que seu professor definiu.",
         "help.cmd.signup": "Auto-cadastro de aluno usando o código de uma turma, e já faz login.",
         "help.cmd.submit": "Envia uma solução em C para uma questão da practice ativa.",
-        "help.cmd.switch": "Troca a turma ativa, ou lista as turmas em que você está matriculado.",
+        "help.cmd.switch": (
+            "Escolhe a turma e depois a practice ativas num menu, ou troca direto para o slug de uma turma."
+        ),
         "help.cmd.get": "Mostra sua última submissão de uma questão na practice ativa.",
         "help.cmd.status": "Mostra login, turma/practice ativa e estatísticas das questões.",
         "help.cmd.show": "Mostra o enunciado e os casos de teste de amostra de uma questão.",
         "help.cmd.classrooms_list": "Lista as turmas em que você está matriculado, marcando a ativa.",
         "help.cmd.practices_list": "Lista as practices disponíveis na turma ativa, marcando a ativa.",
         "help.cmd.practices_switch": (
-            "Troca a practice ativa, ou lista as practices disponíveis na turma ativa."
+            "Escolhe a practice ativa num menu, ou troca direto para o slug de uma practice."
         ),
         "help.cmd.questions_list": "Lista as questões da practice ativa.",
         "help.cmd.submissions_status": "Consulta o status/resultado de uma submissão anterior.",

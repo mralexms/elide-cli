@@ -96,3 +96,80 @@ def test_classrooms_list_with_no_classrooms_enrolled(logged_in, monkeypatch):
     result = runner.invoke(app, ["classrooms", "list"])
     assert result.exit_code == 1
     assert "not enrolled in any classrooms" in result.output
+
+
+# --- interactive menu (no slug, in a terminal) ---
+
+INTERACTIVE_PRACTICES = [
+    {"slug": "lista-1", "title": "Lista 1", "is_timed": False, "duration_minutes": None, "window_status": "open", "attempt": None},
+]
+
+
+@pytest.fixture
+def interactive(monkeypatch):
+    """Pretends to be in a terminal; records menus and answers them from a queue."""
+    from eliude_cli import prompts
+
+    state = {"answers": [], "menus": []}
+
+    def fake_select(message, options, default=None):
+        state["menus"].append({"message": message, "options": options, "default": default})
+        return state["answers"].pop(0)
+
+    monkeypatch.setattr(prompts, "is_interactive", lambda: True)
+    monkeypatch.setattr(prompts, "select", fake_select)
+    return state
+
+
+@pytest.fixture
+def mock_practice_api(monkeypatch):
+    monkeypatch.setattr(ApiClient, "list_practices", lambda self: INTERACTIVE_PRACTICES)
+    monkeypatch.setattr(ApiClient, "start_practice", lambda self, slug: {"attempt": None})
+
+
+def test_interactive_switch_picks_classroom_then_practice(logged_in, mock_classrooms, mock_practice_api, interactive):
+    interactive["answers"] = ["turma-b", "lista-1"]
+    result = runner.invoke(app, ["switch"])
+    assert result.exit_code == 0, result.output
+    assert [m["message"] for m in interactive["menus"]] == ["Choose a classroom:", "Choose a practice:"]
+    assert [o.value for o in interactive["menus"][0]["options"]] == ["turma-a", "turma-b"]
+    assert logged_in.get_active_classroom() == "turma-b"
+    assert logged_in.get_active_practice() == "lista-1"
+    assert "Switched to classroom 'Turma B' (turma-b)." in result.output
+    assert "Using practice 'Lista 1' (lista-1)." in result.output
+
+
+def test_interactive_switch_highlights_the_active_classroom(logged_in, mock_classrooms, mock_practice_api, interactive):
+    logged_in.set_active_classroom("turma-b")
+    interactive["answers"] = ["turma-b", "lista-1"]
+    runner.invoke(app, ["switch"])
+    menu = interactive["menus"][0]
+    assert menu["default"] == "turma-b"
+    assert [o.label for o in menu["options"]] == ["Turma A", "Turma B (current)"]
+
+
+def test_interactive_switch_skips_the_classroom_menu_with_a_single_classroom(logged_in, monkeypatch, mock_practice_api, interactive):
+    monkeypatch.setattr(ApiClient, "list_classrooms", lambda self: FAKE_CLASSROOMS[:1])
+    interactive["answers"] = ["lista-1"]
+    result = runner.invoke(app, ["switch"])
+    assert result.exit_code == 0, result.output
+    assert [m["message"] for m in interactive["menus"]] == ["Choose a practice:"]
+    assert logged_in.get_active_classroom() == "turma-a"
+
+
+def test_interactive_switch_cancelled_at_classroom_changes_nothing(logged_in, mock_classrooms, mock_practice_api, interactive):
+    logged_in.set_active_classroom("turma-a")
+    logged_in.set_active_practice("antiga")
+    interactive["answers"] = [None]
+    result = runner.invoke(app, ["switch"])
+    assert result.exit_code == 1
+    assert "Cancelled." in result.output
+    assert logged_in.get_active_classroom() == "turma-a"
+    assert logged_in.get_active_practice() == "antiga"
+
+
+def test_switch_with_slug_does_not_open_menus(logged_in, mock_classrooms, interactive):
+    result = runner.invoke(app, ["switch", "turma-b"])
+    assert result.exit_code == 0
+    assert interactive["menus"] == []
+    assert logged_in.get_active_classroom() == "turma-b"

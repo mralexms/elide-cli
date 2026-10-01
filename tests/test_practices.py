@@ -108,3 +108,98 @@ def test_practices_list_with_none_available(logged_in_with_classroom, monkeypatc
     result = runner.invoke(app, ["practices", "list"])
     assert result.exit_code == 1
     assert "no practices yet" in result.output
+
+
+# --- interactive menu (no slug, in a terminal) ---
+
+
+@pytest.fixture
+def interactive(monkeypatch):
+    """Pretends to be in a terminal; records menus/confirms and answers them from queues."""
+    from eliude_cli import prompts
+
+    state = {"answers": [], "menus": [], "confirm_answers": [], "confirms": []}
+
+    def fake_select(message, options, default=None):
+        state["menus"].append({"message": message, "options": options, "default": default})
+        return state["answers"].pop(0)
+
+    def fake_confirm(message):
+        state["confirms"].append(message)
+        return state["confirm_answers"].pop(0)
+
+    monkeypatch.setattr(prompts, "is_interactive", lambda: True)
+    monkeypatch.setattr(prompts, "select", fake_select)
+    monkeypatch.setattr(prompts, "confirm", fake_confirm)
+    return state
+
+
+@pytest.fixture
+def started(monkeypatch):
+    calls = []
+
+    def fake_start(self, slug):
+        calls.append(slug)
+        return {"attempt": None}
+
+    monkeypatch.setattr(ApiClient, "start_practice", fake_start)
+    return calls
+
+
+def test_interactive_practice_switch_activates_the_chosen_practice(logged_in_with_classroom, mock_practices, started, interactive):
+    interactive["answers"] = ["turma-a-exercicios"]
+    result = runner.invoke(app, ["practices", "switch"])
+    assert result.exit_code == 0, result.output
+    assert started == ["turma-a-exercicios"]
+    assert interactive["confirms"] == []
+    assert logged_in_with_classroom.get_active_practice() == "turma-a-exercicios"
+
+
+def test_interactive_timed_practice_asks_before_starting_the_clock(logged_in_with_classroom, mock_practices, started, interactive):
+    interactive["answers"] = ["prova-1"]
+    interactive["confirm_answers"] = [True]
+    result = runner.invoke(app, ["practices", "switch"])
+    assert result.exit_code == 0, result.output
+    assert "clock starts" in interactive["confirms"][0]
+    assert started == ["prova-1"]
+
+
+def test_interactive_timed_practice_declined_does_not_start(logged_in_with_classroom, mock_practices, started, interactive):
+    interactive["answers"] = ["prova-1"]
+    interactive["confirm_answers"] = [False]
+    result = runner.invoke(app, ["practices", "switch"])
+    assert result.exit_code == 1
+    assert started == []
+    assert logged_in_with_classroom.get_active_practice() is None
+
+
+def test_interactive_timed_practice_already_running_skips_the_confirm(logged_in_with_classroom, monkeypatch, started, interactive):
+    running = [dict(FAKE_PRACTICES[1], attempt={"ends_at": "2026-07-23T11:00:00Z"})]
+    monkeypatch.setattr(ApiClient, "list_practices", lambda self: running)
+    interactive["answers"] = ["prova-1"]
+    result = runner.invoke(app, ["practices", "switch"])
+    assert result.exit_code == 0, result.output
+    assert interactive["confirms"] == []
+    assert started == ["prova-1"]
+
+
+def test_interactive_menu_disables_practices_outside_their_window(logged_in_with_classroom, monkeypatch, started, interactive):
+    practices = [
+        dict(FAKE_PRACTICES[0]),
+        dict(FAKE_PRACTICES[0], slug="futura", title="Futura", window_status="upcoming"),
+        dict(FAKE_PRACTICES[0], slug="velha", title="Velha", window_status="closed"),
+    ]
+    monkeypatch.setattr(ApiClient, "list_practices", lambda self: practices)
+    interactive["answers"] = ["turma-a-exercicios"]
+    runner.invoke(app, ["practices", "switch"])
+    reasons = {o.value: o.disabled_reason for o in interactive["menus"][0]["options"]}
+    assert reasons == {"turma-a-exercicios": None, "futura": "not open yet", "velha": "closed"}
+
+
+def test_interactive_menu_with_nothing_open_explains_instead_of_prompting(logged_in_with_classroom, monkeypatch, interactive):
+    closed = [dict(FAKE_PRACTICES[0], window_status="closed")]
+    monkeypatch.setattr(ApiClient, "list_practices", lambda self: closed)
+    result = runner.invoke(app, ["practices", "switch"])
+    assert result.exit_code == 1
+    assert interactive["menus"] == []
+    assert "No practice in this classroom is open right now." in result.output
