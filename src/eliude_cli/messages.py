@@ -132,7 +132,7 @@ _MESSAGES = {
         "help.cmd.signup": "Self-register as a student using a classroom join code, and log in.",
         "help.cmd.submit": "Submit a C solution for a question in the active practice.",
         "help.cmd.switch": (
-            "Choose the active classroom and then practice from a menu, or switch directly to a classroom slug."
+            "Choose the active classroom and then practice from menus; a classroom slug skips the first menu."
         ),
         "help.cmd.get": "Show your latest submission for a question in the active practice.",
         "help.cmd.status": "Show your login, active classroom/practice, and question stats.",
@@ -302,7 +302,7 @@ _MESSAGES = {
         "help.cmd.signup": "Auto-cadastro de aluno usando o código de uma turma, e já faz login.",
         "help.cmd.submit": "Envia uma solução em C para uma questão da practice ativa.",
         "help.cmd.switch": (
-            "Escolhe a turma e depois a practice ativas num menu, ou troca direto para o slug de uma turma."
+            "Escolhe a turma e depois a practice ativas em menus; informar o slug da turma pula o primeiro menu."
         ),
         "help.cmd.get": "Mostra sua última submissão de uma questão na practice ativa.",
         "help.cmd.status": "Mostra login, turma/practice ativa e estatísticas das questões.",

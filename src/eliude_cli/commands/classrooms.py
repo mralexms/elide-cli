@@ -34,34 +34,32 @@ def list_classrooms() -> None:
 
 
 def switch(slug: Optional[str] = typer.Argument(None, help=t("help.arg.classrooms_switch_slug"))) -> None:
-    """Switch the active classroom (and then practice) via an interactive menu, or directly by slug."""
+    """Switch the active classroom and then practice via interactive menus (the
+    classroom menu is skipped when a slug is given). Outside a terminal there's
+    no menu to draw: lists the classrooms, or just switches to the given slug."""
     classrooms = _fetch_classrooms()
+    interactive = prompts.is_interactive()
 
     if slug is None:
-        if not prompts.is_interactive():
+        if not interactive:
             _print_classrooms(classrooms)
             return
         match = _choose_classroom(classrooms)
-        _activate(match)
-        practices.choose_practice(practices._fetch_practices())
-        return
-
-    match = next((c for c in classrooms if c["slug"] == slug), None)
-    if match is None:
-        typer.secho(t("classrooms.not_enrolled_in", slug=slug), fg=typer.colors.RED)
-        raise typer.Exit(code=1)
+    else:
+        match = next((c for c in classrooms if c["slug"] == slug), None)
+        if match is None:
+            typer.secho(t("classrooms.not_enrolled_in", slug=slug), fg=typer.colors.RED)
+            raise typer.Exit(code=1)
 
     _activate(match)
+    if interactive:
+        practices.choose_practice(practices._fetch_practices())
 
 
 def _choose_classroom(classrooms: list[dict]) -> dict:
     if not classrooms:
         typer.echo(t("classrooms.none_enrolled"))
         raise typer.Exit(code=1)
-    # Nothing to choose — go straight to the practices.
-    if len(classrooms) == 1:
-        return classrooms[0]
-
     current = config.get_active_classroom()
     options = [
         prompts.Option(

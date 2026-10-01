@@ -148,13 +148,14 @@ def test_interactive_switch_highlights_the_active_classroom(logged_in, mock_clas
     assert [o.label for o in menu["options"]] == ["Turma A", "Turma B (current)"]
 
 
-def test_interactive_switch_skips_the_classroom_menu_with_a_single_classroom(logged_in, monkeypatch, mock_practice_api, interactive):
+def test_interactive_switch_shows_the_classroom_menu_even_with_a_single_classroom(logged_in, monkeypatch, mock_practice_api, interactive):
     monkeypatch.setattr(ApiClient, "list_classrooms", lambda self: FAKE_CLASSROOMS[:1])
-    interactive["answers"] = ["lista-1"]
+    interactive["answers"] = ["turma-a", "lista-1"]
     result = runner.invoke(app, ["switch"])
     assert result.exit_code == 0, result.output
-    assert [m["message"] for m in interactive["menus"]] == ["Choose a practice:"]
+    assert [m["message"] for m in interactive["menus"]] == ["Choose a classroom:", "Choose a practice:"]
     assert logged_in.get_active_classroom() == "turma-a"
+    assert logged_in.get_active_practice() == "lista-1"
 
 
 def test_interactive_switch_cancelled_at_classroom_changes_nothing(logged_in, mock_classrooms, mock_practice_api, interactive):
@@ -168,8 +169,10 @@ def test_interactive_switch_cancelled_at_classroom_changes_nothing(logged_in, mo
     assert logged_in.get_active_practice() == "antiga"
 
 
-def test_switch_with_slug_does_not_open_menus(logged_in, mock_classrooms, interactive):
+def test_switch_with_slug_skips_the_classroom_menu_but_opens_the_practice_menu(logged_in, mock_classrooms, mock_practice_api, interactive):
+    interactive["answers"] = ["lista-1"]
     result = runner.invoke(app, ["switch", "turma-b"])
-    assert result.exit_code == 0
-    assert interactive["menus"] == []
+    assert result.exit_code == 0, result.output
+    assert [m["message"] for m in interactive["menus"]] == ["Choose a practice:"]
     assert logged_in.get_active_classroom() == "turma-b"
+    assert logged_in.get_active_practice() == "lista-1"
