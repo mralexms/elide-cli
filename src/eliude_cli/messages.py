@@ -75,6 +75,7 @@ _MESSAGES = {
         "signup.passwords_mismatch": "Passwords don't match.",
         "signup.welcome": "Welcome, {name}! Joined classroom '{classroom_name}' ({classroom_slug}).",
         # commands/login.py
+        "login.switch_later": "You can choose your classroom and practice later with `eliude switch`.",
         "login.logged_in_as": "Logged in as {username}.",
         "login.logged_out": "Logged out.",
         # commands/change_password.py
@@ -248,6 +249,7 @@ _MESSAGES = {
         "signup.passwords_mismatch": "As senhas não coincidem.",
         "signup.welcome": "Bem-vindo(a), {name}! Você entrou na turma '{classroom_name}' ({classroom_slug}).",
         # commands/login.py
+        "login.switch_later": "Você pode escolher a turma e a practice depois com `eliude switch`.",
         "login.logged_in_as": "Logado como {username}.",
         "login.logged_out": "Sessão encerrada.",
         # commands/change_password.py

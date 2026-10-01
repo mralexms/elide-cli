@@ -1,9 +1,25 @@
 import typer
 
-from .. import config
+from .. import config, prompts
 from ..client import ApiClient, ApiError
 from ..messages import t
 from ..session import anonymous_client
+from . import classrooms
+
+
+def open_menus_after_auth(choose) -> None:
+    """Runs `choose` (the classroom/practice menus) right after a successful
+    login/signup, in a terminal. The command itself already succeeded, so a
+    cancelled menu or a failure here (e.g. 403 while still on a temporary
+    password) must not turn it into a failed command — just point at
+    `eliude switch`."""
+    if not prompts.is_interactive():
+        return
+    try:
+        choose()
+    except typer.Exit as e:
+        if e.exit_code:
+            typer.echo(t("login.switch_later"))
 
 
 def login(
@@ -20,6 +36,8 @@ def login(
     config.set_token(token, username)
     config.clear_active_classroom()
     typer.secho(t("login.logged_in_as", username=username), fg=typer.colors.GREEN)
+    # Straight into choosing the classroom and practice, same as `eliude switch`.
+    open_menus_after_auth(lambda: classrooms.switch(slug=None))
 
 
 def logout() -> None:
