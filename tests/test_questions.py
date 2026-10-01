@@ -235,3 +235,19 @@ def test_show_rejects_combining_display_mode_flags(logged_in_with_classroom, moc
     result = runner.invoke(app, ["questions", "show", "hello-world", "--caption", "--input-sample"])
     assert result.exit_code == 1
     assert "Use only one of" in result.output
+
+def test_questions_bare_invocation_does_not_filter_by_tag(logged_in_with_classroom, monkeypatch):
+    # Regression: the bare `eliude questions` callback called list_questions()
+    # directly without tag=, so the tag option's typer.OptionInfo object was
+    # sent as ?tag=... and the server returned no questions at all.
+    received = []
+
+    def fake_list_questions(self, tag=None):
+        received.append(tag)
+        return FAKE_QUESTIONS
+
+    monkeypatch.setattr(ApiClient, "list_questions", fake_list_questions)
+    result = runner.invoke(app, ["questions"])
+    assert result.exit_code == 0
+    assert received == [None]
+

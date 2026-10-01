@@ -99,7 +99,9 @@ questions_app = typer.Typer(help=t("help.group.questions"), cls=HelpOnInvalidCom
 @questions_app.callback(invoke_without_command=True)
 def questions_callback(ctx: typer.Context) -> None:
     if ctx.invoked_subcommand is None:
-        questions.list_questions(show_timestamp=False, unsolved=False)
+        # Called directly (not via Typer), so every option must be passed: an
+        # omitted one gets its typer.Option(...) object as value, not its default.
+        questions.list_questions(show_timestamp=False, unsolved=False, tag=None)
         raise typer.Exit()
 
 
