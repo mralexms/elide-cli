@@ -1,3 +1,4 @@
+import pytest
 from typer.testing import CliRunner
 
 from eliude_cli import __version__, main as main_module, version_check
@@ -85,3 +86,28 @@ def test_invalid_nested_command_shows_that_group_help(cli_config):
     assert "Usage: eliude questions" in result.output
     assert "list" in result.output  # questions' own subcommand is listed
     assert "No such command" not in result.output
+
+
+def test_run_turns_an_unhandled_exception_into_a_short_message(cli_config, monkeypatch, capsys):
+    def boom():
+        raise RuntimeError("internal detail")
+
+    monkeypatch.delenv("ELIUDE_DEBUG", raising=False)
+    monkeypatch.setattr(main_module, "app", boom)
+    with pytest.raises(SystemExit) as exc_info:
+        main_module.run()
+    assert exc_info.value.code == 1
+    err = capsys.readouterr().err
+    assert "Something went wrong" in err
+    assert "internal detail" not in err
+    assert "Traceback" not in err
+
+
+def test_run_shows_the_traceback_with_eliude_debug(cli_config, monkeypatch):
+    def boom():
+        raise RuntimeError("internal detail")
+
+    monkeypatch.setenv("ELIUDE_DEBUG", "1")
+    monkeypatch.setattr(main_module, "app", boom)
+    with pytest.raises(RuntimeError, match="internal detail"):
+        main_module.run()

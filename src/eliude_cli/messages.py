@@ -2,6 +2,28 @@ from . import config
 
 _MESSAGES = {
     "en": {
+        # client.py
+        "api.unreachable": "Could not reach the Eliude server at {url}.",
+        "api.timeout": "The Eliude server at {url} took too long to respond. Try again in a moment.",
+        "api.request_failed": "Could not complete the request to the Eliude server at {url}.",
+        "api.redirected": (
+            "The server moved to a new address and this request can't follow it. "
+            "Run: eliude config set-url {url}"
+        ),
+        "api.not_logged_in": "Not logged in or token expired. Run `eliude login`.",
+        "api.not_found": "Not found.",
+        "api.rate_limited": "Too many requests. Wait a moment and try again.",
+        "api.server_error": (
+            "The Eliude server ran into an error (HTTP {status}). Try again in a moment; "
+            "if it keeps happening, let your teacher know."
+        ),
+        "api.unexpected_status": "Unexpected response from the Eliude server (HTTP {status}).",
+        # main.py
+        "error.unexpected": (
+            "Something went wrong and eliude couldn't finish this command. "
+            "If it keeps happening, let your teacher know. "
+            "(Run with ELIUDE_DEBUG=1 to see the technical details.)"
+        ),
         # session.py
         "session.not_logged_in": "Not logged in. Run `eliude login` first.",
         "session.no_active_classroom": "No active classroom set. Run `eliude switch` first.",
@@ -132,6 +154,28 @@ _MESSAGES = {
         "help.arg.config_set_language": "Language code, e.g. en or pt-BR",
     },
     "pt-BR": {
+        # client.py
+        "api.unreachable": "Não foi possível conectar ao servidor Eliude em {url}.",
+        "api.timeout": "O servidor Eliude em {url} demorou demais para responder. Tente de novo em instantes.",
+        "api.request_failed": "Não foi possível concluir a requisição ao servidor Eliude em {url}.",
+        "api.redirected": (
+            "O servidor mudou de endereço e esta requisição não consegue segui-lo. "
+            "Rode: eliude config set-url {url}"
+        ),
+        "api.not_logged_in": "Você não está logado ou o token expirou. Rode `eliude login`.",
+        "api.not_found": "Não encontrado.",
+        "api.rate_limited": "Muitas requisições seguidas. Aguarde um pouco e tente de novo.",
+        "api.server_error": (
+            "O servidor Eliude encontrou um erro (HTTP {status}). Tente de novo em instantes; "
+            "se continuar acontecendo, avise seu professor."
+        ),
+        "api.unexpected_status": "Resposta inesperada do servidor Eliude (HTTP {status}).",
+        # main.py
+        "error.unexpected": (
+            "Algo deu errado e o eliude não conseguiu concluir este comando. "
+            "Se continuar acontecendo, avise seu professor. "
+            "(Rode com ELIUDE_DEBUG=1 para ver os detalhes técnicos.)"
+        ),
         # session.py
         "session.not_logged_in": "Você não está logado. Rode `eliude login` primeiro.",
         "session.no_active_classroom": "Nenhuma turma ativa. Rode `eliude switch` primeiro.",

@@ -1,3 +1,6 @@
+import os
+import sys
+
 import typer
 from typer.core import TyperGroup
 
@@ -114,5 +117,20 @@ config_app.command("set-language", help=t("help.cmd.config_set_language"))(confi
 app.add_typer(config_app, name="config")
 
 
+
+def run() -> None:
+    """Console-script entry point. Any exception no command handled turns
+    into a short message instead of a traceback pointing at our source code
+    — students can't act on that. ELIUDE_DEBUG=1 brings the traceback back.
+    """
+    try:
+        app()
+    except Exception:
+        if os.environ.get("ELIUDE_DEBUG"):
+            raise
+        typer.secho(t("error.unexpected"), fg=typer.colors.RED, err=True)
+        sys.exit(1)
+
+
 if __name__ == "__main__":
-    app()
+    run()

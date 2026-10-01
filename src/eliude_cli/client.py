@@ -1,5 +1,7 @@
 import requests
 
+from .messages import t
+
 
 class ApiError(Exception):
     pass
@@ -23,17 +25,30 @@ class ApiClient:
         try:
             response = self.session.request(method, url, timeout=30, **kwargs)
         except requests.exceptions.ConnectionError:
-            raise ApiError(f"Could not reach the Eliude server at {self.base_url}")
+            raise ApiError(t("api.unreachable", url=self.base_url))
         except requests.exceptions.Timeout:
-            raise ApiError(f"Request to {self.base_url} timed out")
+            raise ApiError(t("api.timeout", url=self.base_url))
+        except requests.exceptions.RequestException:
+            raise ApiError(t("api.request_failed", url=self.base_url))
+
+        # A redirect (e.g. http -> https) silently turns a POST into a GET,
+        # which then fails with a confusing 405 — point at the real fix.
+        if response.history and response.request.method != method.upper():
+            new_base = response.url[: -len(path)] if response.url.endswith(path) else response.url
+            raise ApiError(t("api.redirected", url=new_base.rstrip("/")))
 
         if response.status_code == 401:
-            raise ApiError("Not logged in or token expired. Run `eliude login`.")
+            raise ApiError(t("api.not_logged_in"))
         if response.status_code in (400, 403):
             raise ApiError(self._format_validation_errors(response))
         if response.status_code == 404:
-            raise ApiError("Not found.")
-        response.raise_for_status()
+            raise ApiError(t("api.not_found"))
+        if response.status_code == 429:
+            raise ApiError(t("api.rate_limited"))
+        if response.status_code >= 500:
+            raise ApiError(t("api.server_error", status=response.status_code))
+        if response.status_code >= 400:
+            raise ApiError(t("api.unexpected_status", status=response.status_code))
         return response
 
     @staticmethod

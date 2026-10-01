@@ -78,3 +78,11 @@ def test_invalid_version_fails_open(cli_config, monkeypatch):
         ApiClient, "get_latest_release", lambda self: {"version": "not-a-version", "repo_url": "https://x"}
     )
     version_check.check_version_compatibility(FakeContext("submit"))  # must not raise/block
+
+
+def test_non_json_release_response_fails_open(cli_config, monkeypatch):
+    def raise_error(self):
+        raise ValueError("Expecting value: line 1 column 1 (char 0)")
+
+    monkeypatch.setattr(ApiClient, "get_latest_release", raise_error)
+    version_check.check_version_compatibility(FakeContext("submit"))  # must not raise/block

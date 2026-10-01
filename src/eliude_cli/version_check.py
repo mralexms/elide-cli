@@ -38,7 +38,8 @@ def check_version_compatibility(ctx: typer.Context) -> None:
         release = anonymous_client().get_latest_release()
         required = Version(release["version"])
         installed = Version(installed_version_str)
-    except (ApiError, KeyError, InvalidVersion):
+    # ValueError: a non-JSON body (e.g. an HTML error page from a proxy).
+    except (ApiError, KeyError, InvalidVersion, ValueError):
         return
 
     if required == installed:
