@@ -12,9 +12,9 @@ CLI for the Eliude C programming judge.
    ```bash
    pipx install "git+https://github.com/mralexms/elide-cli.git"
    ```
-3. Point the CLI at your server, if it isn't the default (`http://localhost:8000`):
+3. The CLI already points at the production server (`https://fabrica.ifma.edu.br/eliude`). Only if you use a different one (e.g. a backend running locally):
    ```bash
-   eliude config set-url http://<your-eliude-host>
+   eliude config set-url http://localhost:8000
    ```
 4. If you're a student, either `eliude login` with credentials your teacher gave you, or self-register with a classroom join code (see below).
 

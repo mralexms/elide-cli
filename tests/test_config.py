@@ -47,3 +47,14 @@ def test_get_language_no_locale_info_at_all_defaults_to_english(cli_config, monk
     monkeypatch.delenv("LC_MESSAGES", raising=False)
     monkeypatch.delenv("LANG", raising=False)
     assert config.get_language() == "en"
+
+
+def test_base_url_defaults_to_the_production_server(cli_config, monkeypatch):
+    monkeypatch.delenv("ELIUDE_BASE_URL", raising=False)
+    assert cli_config.get_base_url() == "https://fabrica.ifma.edu.br/eliude"
+
+
+def test_configured_base_url_wins_over_the_default(cli_config, monkeypatch):
+    monkeypatch.delenv("ELIUDE_BASE_URL", raising=False)
+    cli_config.set_base_url("http://localhost:8000")
+    assert cli_config.get_base_url() == "http://localhost:8000"

@@ -2,7 +2,9 @@ import json
 import os
 from pathlib import Path
 
-DEFAULT_BASE_URL = "http://localhost:8000"
+# The production server, so students don't need any setup after installing.
+# Local dev: `eliude config set-url http://localhost:8000` or ELIUDE_BASE_URL.
+DEFAULT_BASE_URL = "https://fabrica.ifma.edu.br/eliude"
 DEFAULT_LANGUAGE = "en"
 SUPPORTED_LANGUAGES = ("en", "pt-BR")
 
