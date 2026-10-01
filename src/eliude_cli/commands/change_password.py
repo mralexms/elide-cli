@@ -6,9 +6,9 @@ from ..session import require_client
 
 
 def change_password(
-    current_password: str = typer.Option(..., prompt=True, hide_input=True),
-    new_password: str = typer.Option(..., prompt=True, hide_input=True),
-    new_password_confirm: str = typer.Option(..., prompt="Confirm new password", hide_input=True),
+    current_password: str = typer.Option(..., prompt=t("prompt.current_password"), hide_input=True),
+    new_password: str = typer.Option(..., prompt=t("prompt.new_password"), hide_input=True),
+    new_password_confirm: str = typer.Option(..., prompt=t("prompt.confirm_new_password"), hide_input=True),
 ) -> None:
     """Set a new password — required if you're still on a temporary one your teacher set."""
     if new_password != new_password_confirm:

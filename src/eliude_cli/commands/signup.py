@@ -9,11 +9,11 @@ from .login import open_menus_after_auth
 
 
 def signup(
-    name: str = typer.Option(..., prompt="Full name"),
-    email: str = typer.Option(..., prompt=True),
-    password: str = typer.Option(..., prompt=True, hide_input=True),
-    password_confirm: str = typer.Option(..., prompt="Confirm password", hide_input=True),
-    classroom_code: str = typer.Option(..., prompt="Classroom code"),
+    name: str = typer.Option(..., prompt=t("prompt.full_name")),
+    email: str = typer.Option(..., prompt=t("prompt.email")),
+    password: str = typer.Option(..., prompt=t("prompt.password"), hide_input=True),
+    password_confirm: str = typer.Option(..., prompt=t("prompt.confirm_password"), hide_input=True),
+    classroom_code: str = typer.Option(..., prompt=t("prompt.classroom_code")),
 ) -> None:
     """Self-register as a student using a classroom join code, and log in."""
     if password != password_confirm:

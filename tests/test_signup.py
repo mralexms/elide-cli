@@ -122,3 +122,13 @@ def test_cancelling_the_menu_after_signup_keeps_the_account_logged_in(cli_config
     assert cli_config.get_token() == "faketoken123"
     assert "later with `eliude switch`" in result.output
 
+
+def test_prompt_labels_are_translated(cli_config, monkeypatch):
+    from eliude_cli.messages import t
+
+    monkeypatch.setenv("ELIUDE_LANGUAGE", "pt-BR")
+    assert [t(k) for k in ("prompt.username", "prompt.password", "prompt.classroom_code")] == [
+        "Usuário",
+        "Senha",
+        "Código da turma",
+    ]

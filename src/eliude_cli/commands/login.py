@@ -23,8 +23,8 @@ def open_menus_after_auth(choose) -> None:
 
 
 def login(
-    username: str = typer.Option(..., prompt=True),
-    password: str = typer.Option(..., prompt=True, hide_input=True),
+    username: str = typer.Option(..., prompt=t("prompt.username")),
+    password: str = typer.Option(..., prompt=t("prompt.password"), hide_input=True),
 ) -> None:
     """Log in and store an auth token locally."""
     client = anonymous_client()
