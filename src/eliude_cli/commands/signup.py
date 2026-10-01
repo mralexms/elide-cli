@@ -4,6 +4,8 @@ from .. import config
 from ..client import ApiError
 from ..messages import t
 from ..session import anonymous_client
+from . import practices
+from .login import open_menus_after_auth
 
 
 def signup(
@@ -33,3 +35,6 @@ def signup(
         t("signup.welcome", name=name, classroom_name=classroom["name"], classroom_slug=classroom["slug"]),
         fg=typer.colors.GREEN,
     )
+
+    # The join code already picked the classroom — go straight to its practices.
+    open_menus_after_auth(lambda: practices.choose_practice(practices._fetch_practices()))
