@@ -4,6 +4,7 @@ import typer
 
 from .. import config
 from ..client import ApiError
+from ..formatting import echo_block, normalize_newlines
 from ..messages import t
 from ..session import require_practice_client
 
@@ -97,7 +98,7 @@ def show_question(
             typer.secho(t("questions.no_sample"), fg=typer.colors.RED)
             raise typer.Exit(code=1)
         sample = samples[0]
-        typer.echo(sample["stdin_data"] if input_sample else sample["expected_stdout"])
+        typer.echo(normalize_newlines(sample["stdin_data"] if input_sample else sample["expected_stdout"]))
         return
 
     typer.secho(question["title"], bold=True)
@@ -114,9 +115,10 @@ def show_question(
     if samples:
         typer.echo()
         typer.secho(t("questions.sample_test_cases_header"), bold=True)
-        for tc in samples:
-            typer.echo(f"  {t('questions.input_label', value=repr(tc['stdin_data']))}")
-            typer.echo(f"  {t('questions.expected_label', value=repr(tc['expected_stdout']))}")
+        for n, tc in enumerate(samples, start=1):
+            typer.echo(f"  {t('questions.sample_n', n=n)}")
+            echo_block(t("questions.input_header"), tc["stdin_data"])
+            echo_block(t("questions.expected_header"), tc["expected_stdout"])
 
     if download:
         if not samples:
@@ -125,6 +127,6 @@ def show_question(
         sample = samples[0]
         input_path = Path(f"{slug}_input.txt")
         output_path = Path(f"{slug}_output.txt")
-        input_path.write_text(sample["stdin_data"])
-        output_path.write_text(sample["expected_stdout"])
+        input_path.write_text(normalize_newlines(sample["stdin_data"]))
+        output_path.write_text(normalize_newlines(sample["expected_stdout"]))
         typer.secho(t("questions.saved_sample", input_path=input_path, output_path=output_path), fg=typer.colors.GREEN)

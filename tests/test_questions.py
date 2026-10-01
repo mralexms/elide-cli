@@ -236,6 +236,7 @@ def test_show_rejects_combining_display_mode_flags(logged_in_with_classroom, moc
     assert result.exit_code == 1
     assert "Use only one of" in result.output
 
+
 def test_questions_bare_invocation_does_not_filter_by_tag(logged_in_with_classroom, monkeypatch):
     # Regression: the bare `eliude questions` callback called list_questions()
     # directly without tag=, so the tag option's typer.OptionInfo object was
@@ -251,3 +252,47 @@ def test_questions_bare_invocation_does_not_filter_by_tag(logged_in_with_classro
     assert result.exit_code == 0
     assert received == [None]
 
+
+CRLF_QUESTION_DETAIL = {
+    **FAKE_QUESTION_DETAIL,
+    "sample_test_cases": [
+        {"id": 1, "stdin_data": "1\r\n2", "expected_stdout": "3\r\n", "order": 1},
+        {"id": 2, "stdin_data": "", "expected_stdout": "0", "order": 2},
+    ],
+}
+
+
+@pytest.fixture
+def mock_crlf_question(monkeypatch):
+    monkeypatch.setattr(ApiClient, "get_question", lambda self, slug: CRLF_QUESTION_DETAIL)
+
+
+def test_show_prints_samples_as_plain_lines_without_escapes(logged_in_with_classroom, mock_crlf_question):
+    result = runner.invoke(app, ["questions", "show", "soma"])
+    assert result.exit_code == 0
+    assert "\\r" not in result.output and "\\n" not in result.output and "'" not in result.output
+    assert (
+        "  Example 1\n"
+        "    Input:\n"
+        "      1\n"
+        "      2\n"
+        "    Expected output:\n"
+        "      3\n"
+        "  Example 2\n"
+        "    Input:\n"
+        "      (empty)\n"
+        "    Expected output:\n"
+        "      0\n"
+    ) in result.output
+
+
+def test_show_input_sample_strips_windows_line_endings(logged_in_with_classroom, mock_crlf_question):
+    result = runner.invoke(app, ["questions", "show", "soma", "--input-sample"])
+    assert result.output == "1\n2\n"
+
+
+def test_show_download_strips_windows_line_endings(logged_in_with_classroom, mock_crlf_question, tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    runner.invoke(app, ["questions", "show", "soma", "--download"])
+    assert (tmp_path / "soma_input.txt").read_bytes() == b"1\n2"
+    assert (tmp_path / "soma_output.txt").read_bytes() == b"3\n"
