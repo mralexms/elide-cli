@@ -6,6 +6,7 @@ from .. import config
 from ..client import ApiError
 from ..formatting import echo_block, normalize_newlines
 from ..messages import t
+from ..project_files import ProjectFilesError, extra_patterns, is_project, required_files, write_tree
 from ..session import require_practice_client
 
 _STATUS_COLORS = {
@@ -112,6 +113,17 @@ def show_question(
     typer.echo()
     typer.echo(question["statement"])
 
+    if is_project(question):
+        typer.echo()
+        typer.secho(t("questions.files_header"), bold=True)
+        typer.echo(f"  {t('questions.files_required', files=', '.join(required_files(question)))}")
+        patterns = extra_patterns(question)
+        if patterns:
+            typer.echo(f"  {t('questions.files_allowed', patterns=' '.join(patterns))}")
+        provided = [f["path"] for f in question.get("files", []) if f.get("kind") != "student"]
+        if provided:
+            typer.echo(f"  {t('questions.files_provided', files=', '.join(provided))}")
+
     if samples:
         typer.echo()
         typer.secho(t("questions.sample_test_cases_header"), bold=True)
@@ -119,6 +131,21 @@ def show_question(
             typer.echo(f"  {t('questions.sample_n', n=n)}")
             echo_block(t("questions.input_header"), tc["stdin_data"])
             echo_block(t("questions.expected_header"), tc["expected_stdout"])
+
+    if download and question.get("files"):
+        folder = Path(slug)
+        try:
+            written, skipped = write_tree(
+                folder, {f["path"]: f["content"] for f in question["files"]}, overwrite=False
+            )
+        except ProjectFilesError as e:
+            typer.secho(str(e), fg=typer.colors.RED)
+            raise typer.Exit(code=1)
+        typer.secho(t("questions.saved_files", count=len(written), folder=folder), fg=typer.colors.GREEN)
+        if skipped:
+            typer.secho(
+                t("questions.kept_existing", files=", ".join(str(p) for p in skipped)), fg=typer.colors.YELLOW
+            )
 
     if download:
         if not samples:

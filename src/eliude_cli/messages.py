@@ -30,6 +30,16 @@ _MESSAGES = {
         "session.no_active_practice": "No active practice set. Run `eliude practices switch` first.",
         # commands/submit.py
         "submit.grading": "Grading your submission...",
+        "submit.no_path": (
+            "Tell eliude what to submit: a file (eliude submit {slug} solution.c) or a folder. "
+            "Without it, eliude looks for the folder ./{slug}/."
+        ),
+        "submit.sending_files": "Sending {count} file(s) ({kb} KB):",
+        # project_files.py
+        "files.needs_folder": "This question expects several files ({files}): submit the project folder instead.",
+        "files.missing": "Missing in {folder}: {files}.",
+        "files.not_text": "{path} isn't a UTF-8 text file.",
+        "files.unsafe_path": "Refusing to write '{path}' outside the question folder.",
         # version_check.py
         "version.requires_newer": "This server requires eliude-cli {required}, but you have {installed} installed.",
         "version.requires_older": (
@@ -57,6 +67,8 @@ _MESSAGES = {
         "get.overwrite_prompt": "Overwrite it?",
         "get.enter_filename_prompt": "Enter a filename to save as instead",
         "get.saved": "Saved latest submission for '{slug}' to {target}.",
+        "get.files_exist": "{count} file(s) already exist in {folder}.",
+        "get.saved_folder": "Saved latest submission for '{slug}' ({count} files) to {folder}/.",
         # commands/practices.py
         "practices.none_yet": "This classroom has no practices yet.",
         "practices.timed_label": "timed {minutes}min",
@@ -120,6 +132,12 @@ _MESSAGES = {
         "questions.caption_classroom": "Classroom: {classroom}",
         "questions.caption_practice": "Practice: {practice}",
         "questions.caption_question": "Question: {slug}",
+        "questions.files_header": "Files:",
+        "questions.files_required": "you submit: {files}",
+        "questions.files_allowed": "you may also submit: {patterns}",
+        "questions.files_provided": "provided: {files}",
+        "questions.saved_files": "Saved {count} question file(s) to {folder}/.",
+        "questions.kept_existing": "Kept your existing file(s): {files}",
         # commands/status.py
         "status.server_unreachable": "Server: {url} — unreachable ({error})",
         "status.server_reachable": "Server: {url} (v{version}, reachable)",
@@ -160,20 +178,22 @@ _MESSAGES = {
         "help.cmd.config_set_url": "Point the CLI at a different Eliude backend.",
         "help.cmd.config_set_language": "Set the language eliude's messages are shown in.",
         # commands/get.py — option help
-        "help.opt.get_save": "Save to <slug>.c instead of printing to stdout",
+        "help.opt.get_save": "Save to <slug>.c (or, for a project, to the folder <slug>/) instead of printing",
         "help.opt.get_overwrite": "With --save, overwrite the destination file without prompting",
         # commands/questions.py — option/argument help
         "help.opt.questions_show_timestamp": "Also show when you last submitted each question",
         "help.opt.questions_unsolved": "Only show questions you haven't passed yet (never submitted or failing)",
         "help.opt.questions_tag": "Only show questions with this tag (e.g. vetores)",
         "help.opt.show_download": (
-            "Also save the first sample test case as <slug>_input.txt / <slug>_output.txt"
+            "Also save the first sample test case as <slug>_input.txt / <slug>_output.txt, "
+            "and the question's files (if any) to the folder <slug>/"
         ),
         "help.opt.show_caption": "Show only the title/statement, formatted as a C comment block",
         "help.opt.show_input_sample": "Show only the first sample test case's input",
         "help.opt.show_output_sample": "Show only the first sample test case's expected output",
         # commands/practices.py — argument help
         "help.arg.practices_switch_slug": "Practice slug to switch to",
+        "help.arg.submit_path": "A .c file, or the project folder (default: ./<slug>/)",
         # commands/classrooms.py — argument help
         "help.arg.classrooms_switch_slug": "Classroom slug to switch to",
         # commands/status.py — option help
@@ -210,6 +230,16 @@ _MESSAGES = {
         "session.no_active_practice": "Nenhuma practice ativa. Rode `eliude practices switch` primeiro.",
         # commands/submit.py
         "submit.grading": "Avaliando sua submissão...",
+        "submit.no_path": (
+            "Diga o que enviar: um arquivo (eliude submit {slug} solucao.c) ou uma pasta. "
+            "Sem isso, o eliude procura a pasta ./{slug}/."
+        ),
+        "submit.sending_files": "Enviando {count} arquivo(s) ({kb} KB):",
+        # project_files.py
+        "files.needs_folder": "Esta questão espera vários arquivos ({files}): envie a pasta do projeto.",
+        "files.missing": "Faltando em {folder}: {files}.",
+        "files.not_text": "{path} não é um arquivo de texto UTF-8.",
+        "files.unsafe_path": "O eliude não grava '{path}' fora da pasta da questão.",
         # version_check.py
         "version.requires_newer": (
             "Este servidor requer o eliude-cli {required}, mas você tem o {installed} instalado."
@@ -240,6 +270,8 @@ _MESSAGES = {
         "get.overwrite_prompt": "Sobrescrever?",
         "get.enter_filename_prompt": "Digite um nome de arquivo alternativo para salvar",
         "get.saved": "Última submissão de '{slug}' salva em {target}.",
+        "get.files_exist": "{count} arquivo(s) já existem em {folder}.",
+        "get.saved_folder": "Última submissão de '{slug}' ({count} arquivos) salva em {folder}/.",
         # commands/practices.py
         "practices.none_yet": "Esta turma ainda não tem practices.",
         "practices.timed_label": "com tempo, {minutes}min",
@@ -303,6 +335,12 @@ _MESSAGES = {
         "questions.caption_classroom": "Turma: {classroom}",
         "questions.caption_practice": "Practice: {practice}",
         "questions.caption_question": "Questão: {slug}",
+        "questions.files_header": "Arquivos:",
+        "questions.files_required": "você entrega: {files}",
+        "questions.files_allowed": "também pode entregar: {patterns}",
+        "questions.files_provided": "fornecidos: {files}",
+        "questions.saved_files": "{count} arquivo(s) da questão salvos em {folder}/.",
+        "questions.kept_existing": "Mantidos os arquivos que você já tinha: {files}",
         # commands/status.py
         "status.server_unreachable": "Servidor: {url} — inacessível ({error})",
         "status.server_reachable": "Servidor: {url} (v{version}, acessível)",
@@ -343,20 +381,22 @@ _MESSAGES = {
         "help.cmd.config_set_url": "Aponta o CLI para um backend Eliude diferente.",
         "help.cmd.config_set_language": "Define o idioma em que as mensagens do eliude são mostradas.",
         # commands/get.py — option help
-        "help.opt.get_save": "Salva em <slug>.c em vez de mostrar no terminal",
+        "help.opt.get_save": "Salva em <slug>.c (ou, num projeto, na pasta <slug>/) em vez de mostrar no terminal",
         "help.opt.get_overwrite": "Com --save, sobrescreve o arquivo de destino sem perguntar",
         # commands/questions.py — option/argument help
         "help.opt.questions_show_timestamp": "Também mostra quando você submeteu cada questão pela última vez",
         "help.opt.questions_unsolved": "Mostra só questões que você ainda não passou (nunca enviada ou reprovada)",
         "help.opt.questions_tag": "Mostra só questões com essa tag (ex. vetores)",
         "help.opt.show_download": (
-            "Também salva o primeiro caso de teste de amostra como <slug>_input.txt / <slug>_output.txt"
+            "Também salva o primeiro caso de teste de amostra como <slug>_input.txt / <slug>_output.txt, "
+            "e os arquivos da questão (se houver) na pasta <slug>/"
         ),
         "help.opt.show_caption": "Mostra só o título/enunciado, formatado como um comentário de bloco C",
         "help.opt.show_input_sample": "Mostra só o input do primeiro caso de teste de amostra",
         "help.opt.show_output_sample": "Mostra só a saída esperada do primeiro caso de teste de amostra",
         # commands/practices.py — argument help
         "help.arg.practices_switch_slug": "Slug da practice para trocar",
+        "help.arg.submit_path": "Um arquivo .c, ou a pasta do projeto (padrão: ./<slug>/)",
         # commands/classrooms.py — argument help
         "help.arg.classrooms_switch_slug": "Slug da turma para trocar",
         # commands/status.py — option help

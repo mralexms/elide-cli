@@ -96,8 +96,8 @@ class ApiClient:
     def get_question(self, slug: str) -> dict:
         return self._request("GET", f"/api/practice-questions/{slug}/").json()
 
-    def submit(self, slug: str, source_code: str) -> dict:
-        payload = {"source_code": source_code}
+    def submit(self, slug: str, files: dict[str, str]) -> dict:
+        payload = {"files": files}
         return self._request("POST", f"/api/practice-questions/{slug}/submit/", json=payload).json()
 
     def get_submission(self, submission_id: int) -> dict:

@@ -296,3 +296,48 @@ def test_show_download_strips_windows_line_endings(logged_in_with_classroom, moc
     runner.invoke(app, ["questions", "show", "soma", "--download"])
     assert (tmp_path / "soma_input.txt").read_bytes() == b"1\n2"
     assert (tmp_path / "soma_output.txt").read_bytes() == b"3\n"
+
+
+PROJECT_DETAIL = {
+    **FAKE_QUESTION_DETAIL,
+    "sample_test_cases": [],
+    "required_files": ["src/pilha.c"],
+    "extra_file_patterns": ["src/*.c"],
+    "files": [
+        {"path": "src/pilha.c", "kind": "student", "content": "/* aqui */\n"},
+        {"path": "include/pilha.h", "kind": "provided", "content": "void empilha(int);\n"},
+    ],
+}
+
+
+def test_show_lists_a_projects_files(logged_in_with_classroom, monkeypatch):
+    monkeypatch.setattr(ApiClient, "get_question", lambda self, slug: PROJECT_DETAIL)
+    result = runner.invoke(app, ["show", "q1"])
+    assert "src/pilha.c" in result.output
+    assert "src/*.c" in result.output
+    assert "include/pilha.h" in result.output
+
+
+def test_show_of_a_plain_question_has_no_files_section(logged_in_with_classroom, mock_question_detail):
+    result = runner.invoke(app, ["show", "hello-world"])
+    assert "Files:" not in result.output
+
+
+def test_show_download_lays_out_the_project_without_clobbering(logged_in_with_classroom, monkeypatch, tmp_path):
+    monkeypatch.setattr(ApiClient, "get_question", lambda self, slug: PROJECT_DETAIL)
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "q1" / "src").mkdir(parents=True)
+    (tmp_path / "q1" / "src" / "pilha.c").write_text("meu trabalho")
+    result = runner.invoke(app, ["show", "q1", "--download"])
+    assert result.exit_code == 0, result.output
+    assert (tmp_path / "q1" / "include" / "pilha.h").read_text() == "void empilha(int);\n"
+    assert (tmp_path / "q1" / "src" / "pilha.c").read_text() == "meu trabalho"
+
+
+def test_show_download_refuses_paths_outside_the_folder(logged_in_with_classroom, monkeypatch, tmp_path):
+    evil = {**PROJECT_DETAIL, "files": [{"path": "../fora.c", "kind": "provided", "content": "x"}]}
+    monkeypatch.setattr(ApiClient, "get_question", lambda self, slug: evil)
+    monkeypatch.chdir(tmp_path)
+    result = runner.invoke(app, ["show", "q1", "--download"])
+    assert result.exit_code == 1
+    assert not (tmp_path / "fora.c").exists()
