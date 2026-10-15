@@ -38,15 +38,13 @@ docker run --rm -it --add-host=host.docker.internal:host-gateway \
 
 `exit` the shell and the container (config, login token, any files you created) is gone.
 
-## Student self-signup
+## Accounts
 
-A teacher can share a classroom's join code (shown on that classroom's page in the teacher portal). Any student can then join without an account being created for them first:
+Accounts are created on the web, not by the CLI: a teacher enrolls the student, or the student signs in with Google on the Eliude site and joins a classroom with its code. To use the CLI, set a password on the web first (the "Senha do CLI" page, `<server>/password/`), then:
 
 ```bash
-eliude signup
+eliude login
 ```
-
-Prompts for full name, email, password (twice, to confirm), and the classroom code. On success you're logged in and switched into that classroom automatically.
 
 ## Language
 

@@ -13,7 +13,6 @@ from .commands import (
     login,
     practices,
     questions,
-    signup,
     status,
     submissions,
     submit,
@@ -68,7 +67,6 @@ def main_callback(
 app.command(name="login", help=t("help.cmd.login"))(login.login)
 app.command(name="logout", help=t("help.cmd.logout"))(login.logout)
 app.command(name="change-password", help=t("help.cmd.change_password"))(change_password.change_password)
-app.command(name="signup", help=t("help.cmd.signup"))(signup.signup)
 app.command(name="submit", help=t("help.cmd.submit"))(submit.submit)
 app.command(name="switch", help=t("help.cmd.switch"))(classrooms.switch)
 app.command(name="get", help=t("help.cmd.get"))(get.get)

@@ -83,13 +83,11 @@ _MESSAGES = {
         "practices.confirm_start_timed": (
             "'{title}' is timed ({minutes} min) and the clock starts as soon as you select it. Start now?"
         ),
-        # commands/signup.py
-        "signup.passwords_mismatch": "Passwords don't match.",
-        "signup.welcome": "Welcome, {name}! Joined classroom '{classroom_name}' ({classroom_slug}).",
         # commands/login.py
         "login.switch_later": "You can choose your classroom and practice later with `eliude switch`.",
         "login.logged_in_as": "Logged in as {username}.",
         "login.logged_out": "Logged out.",
+        "login.create_password_hint": "No password yet, or signed in with Google? Sign in on the web and create one at {url}",
         # commands/change_password.py
         "change_password.mismatch": "Passwords don't match.",
         "change_password.success": "Password changed.",
@@ -104,10 +102,6 @@ _MESSAGES = {
         "prompt.current": "(current)",
         "prompt.username": "Username",
         "prompt.password": "Password",
-        "prompt.full_name": "Full name",
-        "prompt.email": "Email",
-        "prompt.confirm_password": "Confirm password",
-        "prompt.classroom_code": "Classroom code",
         "prompt.current_password": "Current password",
         "prompt.new_password": "New password",
         "prompt.confirm_new_password": "Confirm new password",
@@ -160,7 +154,6 @@ _MESSAGES = {
         "help.cmd.login": "Log in and store an auth token locally.",
         "help.cmd.logout": "Clear the locally stored auth token.",
         "help.cmd.change_password": "Set a new password — required if you're still on a temporary one your teacher set.",
-        "help.cmd.signup": "Self-register as a student using a classroom join code, and log in.",
         "help.cmd.submit": "Submit a C solution for a question in the active practice.",
         "help.cmd.switch": (
             "Choose the active classroom and then practice from menus; a classroom slug skips the first menu."
@@ -286,13 +279,11 @@ _MESSAGES = {
         "practices.confirm_start_timed": (
             "'{title}' tem tempo ({minutes} min) e o cronômetro começa assim que você selecionar. Começar agora?"
         ),
-        # commands/signup.py
-        "signup.passwords_mismatch": "As senhas não coincidem.",
-        "signup.welcome": "Bem-vindo(a), {name}! Você entrou na turma '{classroom_name}' ({classroom_slug}).",
         # commands/login.py
         "login.switch_later": "Você pode escolher a turma e a practice depois com `eliude switch`.",
         "login.logged_in_as": "Logado como {username}.",
         "login.logged_out": "Sessão encerrada.",
+        "login.create_password_hint": "Ainda não tem senha, ou entra com o Google? Entre na web e crie uma em {url}",
         # commands/change_password.py
         "change_password.mismatch": "As senhas não coincidem.",
         "change_password.success": "Senha alterada.",
@@ -307,10 +298,6 @@ _MESSAGES = {
         "prompt.current": "(atual)",
         "prompt.username": "Usuário",
         "prompt.password": "Senha",
-        "prompt.full_name": "Nome completo",
-        "prompt.email": "E-mail",
-        "prompt.confirm_password": "Confirme a senha",
-        "prompt.classroom_code": "Código da turma",
         "prompt.current_password": "Senha atual",
         "prompt.new_password": "Nova senha",
         "prompt.confirm_new_password": "Confirme a nova senha",
@@ -363,7 +350,6 @@ _MESSAGES = {
         "help.cmd.login": "Faz login e salva um token de autenticação localmente.",
         "help.cmd.logout": "Apaga o token de autenticação salvo localmente.",
         "help.cmd.change_password": "Define uma nova senha — obrigatório se você ainda está com a senha temporária que seu professor definiu.",
-        "help.cmd.signup": "Auto-cadastro de aluno usando o código de uma turma, e já faz login.",
         "help.cmd.submit": "Envia uma solução em C para uma questão da practice ativa.",
         "help.cmd.switch": (
             "Escolhe a turma e depois a practice ativas em menus; informar o slug da turma pula o primeiro menu."

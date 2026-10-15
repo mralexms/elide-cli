@@ -127,3 +127,13 @@ def test_failed_login_opens_no_menus(cli_config, menus, monkeypatch):
     result = login()
     assert result.exit_code == 1
     assert menus["shown"] == []
+
+
+def test_failed_login_points_at_the_web_password_page(cli_config, monkeypatch):
+    def bad_credentials(self, username, password):
+        raise ApiError("Invalid credentials.")
+
+    monkeypatch.setattr(ApiClient, "login", bad_credentials)
+    result = login()
+    assert result.exit_code == 1
+    assert f"{cli_config.get_base_url()}/password/" in result.output

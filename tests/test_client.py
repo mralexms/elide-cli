@@ -49,11 +49,11 @@ def test_other_client_errors_become_an_api_error(cli_config, monkeypatch):
 
 def test_redirect_that_turned_post_into_get_points_at_set_url(cli_config, monkeypatch):
     client = ApiClient("http://eliude.test/eliude")
-    final_url = "https://eliude.test/eliude/api/auth/signup/"
-    redirect = make_response(301, method="POST", url="http://eliude.test/eliude/api/auth/signup/")
+    final_url = "https://eliude.test/eliude/api/auth/login/"
+    redirect = make_response(301, method="POST", url="http://eliude.test/eliude/api/auth/login/")
     stub_request(monkeypatch, client, make_response(405, method="GET", url=final_url, history=[redirect]))
     with pytest.raises(ApiError, match="eliude config set-url https://eliude.test/eliude$"):
-        client._request("POST", "/api/auth/signup/")
+        client._request("POST", "/api/auth/login/")
 
 
 def test_unexpected_network_failure_becomes_an_api_error(cli_config, monkeypatch):

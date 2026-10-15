@@ -9,7 +9,7 @@ from . import classrooms
 
 def open_menus_after_auth(choose) -> None:
     """Runs `choose` (the classroom/practice menus) right after a successful
-    login/signup, in a terminal. The command itself already succeeded, so a
+    login, in a terminal. The command itself already succeeded, so a
     cancelled menu or a failure here (e.g. 403 while still on a temporary
     password) must not turn it into a failed command — just point at
     `eliude switch`."""
@@ -32,6 +32,9 @@ def login(
         token = client.login(username, password)
     except ApiError as e:
         typer.secho(str(e), fg=typer.colors.RED)
+        # Accounts are created on the web (e.g. via Google), with no password
+        # until the user sets one there.
+        typer.echo(t("login.create_password_hint", url=f"{config.get_base_url()}/password/"))
         raise typer.Exit(code=1)
     config.set_token(token, username)
     config.clear_active_classroom()
