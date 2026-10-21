@@ -11,6 +11,9 @@ _MESSAGES = {
             "Run: eliude config set-url {url}"
         ),
         "api.not_logged_in": "Not logged in or token expired. Run `eliude login`.",
+        "api.must_change_password": (
+            "You must change your temporary password before continuing. Run `eliude change-password`."
+        ),
         "api.not_found": "Not found.",
         "api.rate_limited": "Too many requests. Wait a moment and try again.",
         "api.server_error": (
@@ -90,6 +93,9 @@ _MESSAGES = {
         # commands/login.py
         "login.switch_later": "You can choose your classroom and practice later with `eliude switch`.",
         "login.logged_in_as": "Logged in as {username}.",
+        "login.invalid_credentials": "Wrong username or password.",
+        "login.temporary_password": "Your password is temporary. Create a new one to continue.",
+        "login.change_password_later": "Create your new password with `eliude change-password` before anything else.",
         "login.logged_out": "Logged out.",
         "login.create_password_hint": "No password yet, or signed in with Google? Sign in on the web and create one at {url}",
         # commands/change_password.py
@@ -208,6 +214,9 @@ _MESSAGES = {
             "Rode: eliude config set-url {url}"
         ),
         "api.not_logged_in": "Você não está logado ou o token expirou. Rode `eliude login`.",
+        "api.must_change_password": (
+            "Você precisa trocar sua senha temporária antes de continuar. Rode `eliude change-password`."
+        ),
         "api.not_found": "Não encontrado.",
         "api.rate_limited": "Muitas requisições seguidas. Aguarde um pouco e tente de novo.",
         "api.server_error": (
@@ -290,6 +299,9 @@ _MESSAGES = {
         # commands/login.py
         "login.switch_later": "Você pode escolher a turma e a practice depois com `eliude switch`.",
         "login.logged_in_as": "Logado como {username}.",
+        "login.invalid_credentials": "Usuário ou senha incorretos.",
+        "login.temporary_password": "Sua senha é temporária. Crie uma nova para continuar.",
+        "login.change_password_later": "Crie sua senha nova com `eliude change-password` antes de qualquer outro comando.",
         "login.logged_out": "Sessão encerrada.",
         "login.create_password_hint": "Ainda não tem senha, ou entra com o Google? Entre na web e crie uma em {url}",
         # commands/change_password.py

@@ -4,7 +4,9 @@ from .messages import t
 
 
 class ApiError(Exception):
-    pass
+    def __init__(self, message: str, status: int | None = None):
+        super().__init__(message)
+        self.status = status
 
 
 class ApiClient:
@@ -40,7 +42,7 @@ class ApiClient:
         if response.status_code == 401:
             raise ApiError(t("api.not_logged_in"))
         if response.status_code in (400, 403):
-            raise ApiError(self._format_validation_errors(response))
+            raise ApiError(self._format_validation_errors(response), status=response.status_code)
         if response.status_code == 404:
             raise ApiError(t("api.not_found"))
         if response.status_code == 429:
@@ -58,15 +60,21 @@ class ApiClient:
         except ValueError:
             return response.text
         if isinstance(body, dict):
+            # Still on a teacher-issued temporary password (see the backend's
+            # ExpiringTokenAuthentication): the server's text is English-only.
+            if body.get("code") == "must_change_password":
+                return t("api.must_change_password")
             if set(body.keys()) == {"detail"}:
                 return str(body["detail"])
             parts = [f"{field}: {', '.join(msgs) if isinstance(msgs, list) else msgs}" for field, msgs in body.items()]
             return "; ".join(parts)
         return str(body)
 
-    def login(self, username: str, password: str) -> str:
+    def login(self, username: str, password: str) -> dict:
+        """{"token": ..., "must_change_password": bool} — the flag is
+        missing (treated as False) on servers older than it."""
         response = self._request("POST", "/api/auth/login/", data={"username": username, "password": password})
-        return response.json()["token"]
+        return response.json()
 
     def logout(self) -> None:
         self._request("POST", "/api/auth/logout/")

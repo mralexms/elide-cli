@@ -4,7 +4,10 @@ from .. import config, prompts
 from ..client import ApiClient, ApiError
 from ..messages import t
 from ..session import anonymous_client
-from . import classrooms
+from . import change_password, classrooms
+
+# Tries before giving up and pointing at `eliude change-password`.
+_NEW_PASSWORD_ATTEMPTS = 3
 
 
 def open_menus_after_auth(choose) -> None:
@@ -29,18 +32,34 @@ def login(
     """Log in and store an auth token locally."""
     client = anonymous_client()
     try:
-        token = client.login(username, password)
+        result = client.login(username, password)
     except ApiError as e:
-        typer.secho(str(e), fg=typer.colors.RED)
+        # 400 is the server's "Unable to log in with provided credentials".
+        typer.secho(t("login.invalid_credentials") if e.status == 400 else str(e), fg=typer.colors.RED)
         # Accounts are created on the web (e.g. via Google), with no password
         # until the user sets one there.
         typer.echo(t("login.create_password_hint", url=f"{config.get_base_url()}/password/"))
         raise typer.Exit(code=1)
-    config.set_token(token, username)
+    config.set_token(result["token"], username)
     config.clear_active_classroom()
     typer.secho(t("login.logged_in_as", username=username), fg=typer.colors.GREEN)
+    # Until it's changed, the server refuses everything else (403), menus included.
+    if result.get("must_change_password") and not _replace_temporary_password(password):
+        return
     # Straight into choosing the classroom and practice, same as `eliude switch`.
     open_menus_after_auth(lambda: classrooms.switch(slug=None))
+
+
+def _replace_temporary_password(current_password: str) -> bool:
+    typer.secho(t("login.temporary_password"), fg=typer.colors.YELLOW)
+    if prompts.is_interactive():
+        for _ in range(_NEW_PASSWORD_ATTEMPTS):
+            new_password = typer.prompt(t("prompt.new_password"), hide_input=True)
+            new_password_confirm = typer.prompt(t("prompt.confirm_new_password"), hide_input=True)
+            if change_password.apply_new_password(current_password, new_password, new_password_confirm):
+                return True
+    typer.echo(t("login.change_password_later"))
+    return False
 
 
 def logout() -> None:
