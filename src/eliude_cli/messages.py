@@ -45,6 +45,10 @@ _MESSAGES = {
         "version.requires_older": (
             "This server expects an older eliude-cli ({required}); you have {installed} installed."
         ),
+        "version.update_prompt": "Install eliude-cli {required} now?",
+        "version.updating": "Installing eliude-cli {tag}...",
+        "version.update_failed": "The update failed. Install it yourself with:",
+        "version.updated": "Updated. Running your command again...",
         # formatting.py
         "submission.compilation_failed": "Compilation failed:",
         "submission.test_case_pass": "Test case {n}: PASS",
@@ -241,6 +245,10 @@ _MESSAGES = {
             "Este servidor espera uma versão mais antiga do eliude-cli ({required}); "
             "você tem o {installed} instalado."
         ),
+        "version.update_prompt": "Instalar o eliude-cli {required} agora?",
+        "version.updating": "Instalando o eliude-cli {tag}...",
+        "version.update_failed": "A atualização falhou. Instale você mesmo com:",
+        "version.updated": "Atualizado. Executando seu comando de novo...",
         # formatting.py
         "submission.compilation_failed": "Falha na compilação:",
         "submission.test_case_pass": "Caso de teste {n}: PASSOU",

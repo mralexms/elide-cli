@@ -65,7 +65,7 @@ Every time you run a command, the CLI checks that its version matches exactly wh
 pipx install --force "git+https://github.com/mralexms/elide-cli.git@v0.2.0"
 ```
 
-There's no self-update command — you always run that command yourself. `eliude config set-url` (and nothing else) keeps working even when versions don't match, so you can always fix a wrong server URL. If the server is unreachable or hasn't published a release, the check fails open and your commands run normally.
+When you're at a terminal and installed with pipx (as above), the CLI first offers to run that command for you — `Install eliude-cli vX.Y.Z now? (Y/n)` — and then runs your command again on the new version. It never updates without asking, and it doesn't offer on Windows (the running CLI's files are locked there) or when the server points at a repo other than this one; in those cases, or if the update fails, run the command yourself. `eliude config set-url` (and nothing else) keeps working even when versions don't match, so you can always fix a wrong server URL. If the server is unreachable or hasn't published a release, the check fails open and your commands run normally.
 
 ## Releasing a new version
 

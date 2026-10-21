@@ -43,5 +43,5 @@ def select(message: str, options: list[Option], default: Any = None) -> Optional
     ).ask()
 
 
-def confirm(message: str) -> bool:
-    return bool(questionary.confirm(message, default=False).ask())
+def confirm(message: str, default: bool = False) -> bool:
+    return bool(questionary.confirm(message, default=default).ask())
