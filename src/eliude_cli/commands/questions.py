@@ -1,10 +1,11 @@
 from pathlib import Path
 
 import typer
+from rich.console import Console
 
-from .. import config
+from .. import config, display
 from ..client import ApiError
-from ..formatting import echo_block, normalize_newlines
+from ..formatting import normalize_newlines
 from ..messages import t
 from ..project_files import ProjectFilesError, extra_patterns, is_project, required_files, write_tree
 from ..session import require_practice_client
@@ -69,6 +70,52 @@ def _format_caption(question: dict, classroom: str, practice: str, slug: str) ->
     return "\n".join(lines)
 
 
+def _print_question(console: Console, question: dict, formatted: bool) -> None:
+    """The question as `eliude show` prints it. Formatted, the statement is
+    rendered as Markdown; plain (piped), it goes out exactly as written."""
+    console.print(question["title"], style="bold")
+    console.print(t("questions.difficulty_label", difficulty=question["difficulty"]))
+    console.print(t("questions.limits_label", time=question["time_limit_seconds"], memory=question["memory_limit_mb"]))
+    tags = question.get("tags") or []
+    if tags:
+        console.print(t("questions.tags_label", tags=", ".join(tag["name"] for tag in tags)))
+    console.print()
+    text = normalize_newlines(question["statement"])
+    console.print(display.statement(text, console) if formatted else text)
+
+    if is_project(question):
+        console.print()
+        console.print(t("questions.files_header"), style="bold")
+        console.print(f"  {t('questions.files_required', files=', '.join(required_files(question)))}")
+        patterns = extra_patterns(question)
+        if patterns:
+            console.print(f"  {t('questions.files_allowed', patterns=' '.join(patterns))}")
+        provided = [f["path"] for f in question.get("files", []) if f.get("kind") != "student"]
+        if provided:
+            console.print(f"  {t('questions.files_provided', files=', '.join(provided))}")
+
+    samples = question.get("sample_test_cases", [])
+    if samples:
+        console.print()
+        console.print(t("questions.sample_test_cases_header"), style="bold")
+        for n, tc in enumerate(samples, start=1):
+            console.print(f"  {t('questions.sample_n', n=n)}")
+            _print_block(console, t("questions.input_header"), tc["stdin_data"])
+            _print_block(console, t("questions.expected_header"), tc["expected_stdout"])
+
+
+def _print_block(console: Console, label: str, value: str, indent: int = 4) -> None:
+    # Same layout as formatting.echo_block, on a rich console.
+    pad = " " * indent
+    console.print(f"{pad}{label}")
+    text = normalize_newlines(value).rstrip("\n")
+    if not text:
+        console.print(f"{pad}  {t('questions.empty_value')}", style="dim")
+        return
+    for line in text.split("\n"):
+        console.print(f"{pad}  {line}", soft_wrap=True)
+
+
 def show_question(
     slug: str,
     download: bool = typer.Option(False, "--download", help=t("help.opt.show_download")),
@@ -102,35 +149,7 @@ def show_question(
         typer.echo(normalize_newlines(sample["stdin_data"] if input_sample else sample["expected_stdout"]))
         return
 
-    typer.secho(question["title"], bold=True)
-    typer.echo(t("questions.difficulty_label", difficulty=question["difficulty"]))
-    typer.echo(
-        t("questions.limits_label", time=question["time_limit_seconds"], memory=question["memory_limit_mb"])
-    )
-    tags = question.get("tags") or []
-    if tags:
-        typer.echo(t("questions.tags_label", tags=", ".join(tag["name"] for tag in tags)))
-    typer.echo()
-    typer.echo(question["statement"])
-
-    if is_project(question):
-        typer.echo()
-        typer.secho(t("questions.files_header"), bold=True)
-        typer.echo(f"  {t('questions.files_required', files=', '.join(required_files(question)))}")
-        patterns = extra_patterns(question)
-        if patterns:
-            typer.echo(f"  {t('questions.files_allowed', patterns=' '.join(patterns))}")
-        provided = [f["path"] for f in question.get("files", []) if f.get("kind") != "student"]
-        if provided:
-            typer.echo(f"  {t('questions.files_provided', files=', '.join(provided))}")
-
-    if samples:
-        typer.echo()
-        typer.secho(t("questions.sample_test_cases_header"), bold=True)
-        for n, tc in enumerate(samples, start=1):
-            typer.echo(f"  {t('questions.sample_n', n=n)}")
-            echo_block(t("questions.input_header"), tc["stdin_data"])
-            echo_block(t("questions.expected_header"), tc["expected_stdout"])
+    display.show(lambda console, formatted: _print_question(console, question, formatted))
 
     if download and question.get("files"):
         folder = Path(slug)

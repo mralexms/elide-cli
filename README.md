@@ -57,6 +57,12 @@ eliude config set-language en
 
 `ELIUDE_LANGUAGE` (an environment variable) takes priority over both the system locale and the saved setting, if set.
 
+## Reading a question
+
+`eliude show q1` renders the statement's Markdown (headings, **bold**, lists, tables, colored C code) and, when it doesn't fit the screen, opens it in `less` (with `LESS=FRX` unless you set your own `LESS`, or another pager through `PAGER`). Single line breaks in the statement are kept, as on the web. Piped or redirected (`eliude show q1 > q1.txt`), it prints the statement as written, with no colors and no pager. On Windows there's no pager.
+
+Colors are 256 by default, which PuTTY, macOS Terminal and most terminals support even when `TERM` doesn't say so. Set `ELIUDE_COLORS` to `16`, `256`, `truecolor` or `none` to change it; `NO_COLOR` also turns colors off.
+
 ## Version compatibility
 
 Every time you run a command, the CLI checks that its version matches exactly what your configured server declares as compatible. If it doesn't match — either direction — the command is refused and the CLI prints the exact command to reinstall the right version, e.g.:
