@@ -48,7 +48,7 @@ class ApiClient:
         if response.status_code == 429:
             raise ApiError(t("api.rate_limited"))
         if response.status_code >= 500:
-            raise ApiError(t("api.server_error", status=response.status_code))
+            raise ApiError(t("api.server_error", status=response.status_code), status=response.status_code)
         if response.status_code >= 400:
             raise ApiError(t("api.unexpected_status", status=response.status_code))
         return response
@@ -60,32 +60,25 @@ class ApiClient:
         except ValueError:
             return response.text
         if isinstance(body, dict):
-            # Still on a teacher-issued temporary password (see the backend's
-            # ExpiringTokenAuthentication): the server's text is English-only.
-            if body.get("code") == "must_change_password":
-                return t("api.must_change_password")
             if set(body.keys()) == {"detail"}:
                 return str(body["detail"])
             parts = [f"{field}: {', '.join(msgs) if isinstance(msgs, list) else msgs}" for field, msgs in body.items()]
             return "; ".join(parts)
         return str(body)
 
-    def login(self, username: str, password: str) -> dict:
-        """{"token": ..., "must_change_password": bool} — the flag is
-        missing (treated as False) on servers older than it."""
-        response = self._request("POST", "/api/auth/login/", data={"username": username, "password": password})
-        return response.json()
+    def request_login_code(self, login: str) -> dict:
+        """Asks the server to email a login code to the account `login` (its
+        email or username) identifies. The answer is the same whether or
+        not the account exists: {"detail", "minutes"}."""
+        return self._request("POST", "/api/auth/code/", data={"login": login}).json()
+
+    def verify_login_code(self, login: str, code: str) -> dict:
+        """Trades a login code for {"token", "username"}. A wrong or expired
+        code is a 400."""
+        return self._request("POST", "/api/auth/code/verify/", data={"login": login, "code": code}).json()
 
     def logout(self) -> None:
         self._request("POST", "/api/auth/logout/")
-
-    def change_password(self, current_password: str, new_password: str, new_password_confirm: str) -> None:
-        payload = {
-            "current_password": current_password,
-            "new_password": new_password,
-            "new_password_confirm": new_password_confirm,
-        }
-        self._request("POST", "/api/auth/change-password/", json=payload)
 
     def list_questions(self, tag: str | None = None) -> list[dict]:
         params = {"tag": tag} if tag else None

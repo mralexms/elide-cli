@@ -16,7 +16,7 @@ CLI for the Eliude C programming judge.
    ```bash
    eliude config set-url http://localhost:8000
    ```
-4. If you're a student, either `eliude login` with credentials your teacher gave you, or self-register with a classroom join code (see below).
+4. If you're a student, run `eliude login` with the email your teacher registered (or the one you sign in with on the web) and type the code it sends you (see below).
 
 ## Trying it in an ephemeral container
 
@@ -40,11 +40,13 @@ docker run --rm -it --add-host=host.docker.internal:host-gateway \
 
 ## Accounts
 
-Accounts are created on the web, not by the CLI: a teacher enrolls the student, or the student signs in with Google on the Eliude site and joins a classroom with its code. To use the CLI, set a password on the web first (the "Senha do CLI" page, `<server>/password/`), then:
+Accounts are created on the web, not by the CLI: a teacher enrolls the student by email, or the student signs in with Google on the Eliude site and joins a classroom with its code. The CLI has no password: `eliude login` asks for your email (or username), emails you a 6-digit code (valid for 10 minutes) and asks for it.
 
 ```bash
 eliude login
 ```
+
+If the email doesn't arrive, sign in on the web, open "Código para o CLI" (`<server>/cli-code/`) and type that code instead (`eliude login --no-email`). `eliude login --login you@example.com --code 123456` does it all in one go.
 
 ## Language
 
