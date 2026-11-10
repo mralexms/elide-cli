@@ -11,9 +11,6 @@ _MESSAGES = {
             "Run: eliude config set-url {url}"
         ),
         "api.not_logged_in": "Not logged in or token expired. Run `eliude login`.",
-        "api.must_change_password": (
-            "You must change your temporary password before continuing. Run `eliude change-password`."
-        ),
         "api.not_found": "Not found.",
         "api.rate_limited": "Too many requests. Wait a moment and try again.",
         "api.server_error": (
@@ -93,14 +90,20 @@ _MESSAGES = {
         # commands/login.py
         "login.switch_later": "You can choose your classroom and practice later with `eliude switch`.",
         "login.logged_in_as": "Logged in as {username}.",
-        "login.invalid_credentials": "Wrong username or password.",
-        "login.temporary_password": "Your password is temporary. Create a new one to continue.",
-        "login.change_password_later": "Create your new password with `eliude change-password` before anything else.",
+        "login.code_sent": (
+            "If the account exists, we sent a 6-digit code to its email. It's valid for {minutes} minutes."
+        ),
+        "login.code_from_web": "(Also works: a code generated on the web, at {url})",
+        "login.invalid_code": "Invalid or expired code.",
+        "login.try_again": (
+            "Run `eliude login` again for a new code. Didn't get the email? Check your spam folder, "
+            "or sign in on the web and generate a code at {url}"
+        ),
+        "login.email_unavailable": (
+            "Couldn't send the email right now. Sign in on the web and generate a code at {url}, "
+            "then run `eliude login --no-email`."
+        ),
         "login.logged_out": "Logged out.",
-        "login.create_password_hint": "No password yet, or signed in with Google? Sign in on the web and create one at {url}",
-        # commands/change_password.py
-        "change_password.mismatch": "Passwords don't match.",
-        "change_password.success": "Password changed.",
         # commands/classrooms.py
         "classrooms.none_enrolled": "You are not enrolled in any classrooms yet.",
         "classrooms.not_enrolled_in": "You are not enrolled in classroom '{slug}'.",
@@ -110,11 +113,8 @@ _MESSAGES = {
         "prompt.select_instruction": "(arrow keys or number, then Enter)",
         "prompt.select_instruction_arrows": "(arrow keys, then Enter)",
         "prompt.current": "(current)",
-        "prompt.username": "Username",
-        "prompt.password": "Password",
-        "prompt.current_password": "Current password",
-        "prompt.new_password": "New password",
-        "prompt.confirm_new_password": "Confirm new password",
+        "prompt.login": "Email or username",
+        "prompt.code": "Code",
         "prompt.cancelled": "Cancelled.",
         # commands/questions.py
         "questions.no_questions": "No questions available.",
@@ -163,9 +163,11 @@ _MESSAGES = {
         "help.group.submissions": "Check submission results",
         "help.group.config": "CLI configuration",
         "help.opt.version": "Show the version and exit.",
-        "help.cmd.login": "Log in and store an auth token locally.",
+        "help.cmd.login": "Log in with a code sent to your email, and store an auth token locally.",
         "help.cmd.logout": "Clear the locally stored auth token.",
-        "help.cmd.change_password": "Set a new password — required if you're still on a temporary one your teacher set.",
+        "help.opt.login_login": "Your email or username (asked if omitted).",
+        "help.opt.login_code": "A code you already have (skips sending a new one).",
+        "help.opt.login_no_email": "Don't email a code: you'll type one generated on the web.",
         "help.cmd.submit": "Submit a C solution for a question in the active practice.",
         "help.cmd.switch": (
             "Choose the active classroom and then practice from menus; a classroom slug skips the first menu."
@@ -216,9 +218,6 @@ _MESSAGES = {
             "Rode: eliude config set-url {url}"
         ),
         "api.not_logged_in": "Você não está logado ou o token expirou. Rode `eliude login`.",
-        "api.must_change_password": (
-            "Você precisa trocar sua senha temporária antes de continuar. Rode `eliude change-password`."
-        ),
         "api.not_found": "Não encontrado.",
         "api.rate_limited": "Muitas requisições seguidas. Aguarde um pouco e tente de novo.",
         "api.server_error": (
@@ -301,14 +300,20 @@ _MESSAGES = {
         # commands/login.py
         "login.switch_later": "Você pode escolher a turma e a practice depois com `eliude switch`.",
         "login.logged_in_as": "Logado como {username}.",
-        "login.invalid_credentials": "Usuário ou senha incorretos.",
-        "login.temporary_password": "Sua senha é temporária. Crie uma nova para continuar.",
-        "login.change_password_later": "Crie sua senha nova com `eliude change-password` antes de qualquer outro comando.",
+        "login.code_sent": (
+            "Se a conta existir, enviamos um código de 6 dígitos para o email dela. Ele vale {minutes} minutos."
+        ),
+        "login.code_from_web": "(Também vale um código gerado na web, em {url})",
+        "login.invalid_code": "Código inválido ou expirado.",
+        "login.try_again": (
+            "Rode `eliude login` de novo para receber outro código. O email não chegou? Confira o spam, "
+            "ou entre na web e gere um código em {url}"
+        ),
+        "login.email_unavailable": (
+            "Não foi possível enviar o email agora. Entre na web e gere um código em {url}, "
+            "depois rode `eliude login --no-email`."
+        ),
         "login.logged_out": "Sessão encerrada.",
-        "login.create_password_hint": "Ainda não tem senha, ou entra com o Google? Entre na web e crie uma em {url}",
-        # commands/change_password.py
-        "change_password.mismatch": "As senhas não coincidem.",
-        "change_password.success": "Senha alterada.",
         # commands/classrooms.py
         "classrooms.none_enrolled": "Você ainda não está matriculado em nenhuma turma.",
         "classrooms.not_enrolled_in": "Você não está matriculado na turma '{slug}'.",
@@ -318,11 +323,8 @@ _MESSAGES = {
         "prompt.select_instruction": "(setas ou número, depois Enter)",
         "prompt.select_instruction_arrows": "(setas, depois Enter)",
         "prompt.current": "(atual)",
-        "prompt.username": "Usuário",
-        "prompt.password": "Senha",
-        "prompt.current_password": "Senha atual",
-        "prompt.new_password": "Nova senha",
-        "prompt.confirm_new_password": "Confirme a nova senha",
+        "prompt.login": "Email ou usuário",
+        "prompt.code": "Código",
         "prompt.cancelled": "Cancelado.",
         # commands/questions.py
         "questions.no_questions": "Nenhuma questão disponível.",
@@ -371,9 +373,11 @@ _MESSAGES = {
         "help.group.submissions": "Consulte o resultado de submissões",
         "help.group.config": "Configuração do CLI",
         "help.opt.version": "Mostra a versão e sai.",
-        "help.cmd.login": "Faz login e salva um token de autenticação localmente.",
+        "help.cmd.login": "Entra com um código enviado ao seu email e salva um token de autenticação localmente.",
         "help.cmd.logout": "Apaga o token de autenticação salvo localmente.",
-        "help.cmd.change_password": "Define uma nova senha — obrigatório se você ainda está com a senha temporária que seu professor definiu.",
+        "help.opt.login_login": "Seu email ou usuário (perguntado se omitido).",
+        "help.opt.login_code": "Um código que você já tem (não envia outro).",
+        "help.opt.login_no_email": "Não envia código por email: você digita um gerado na web.",
         "help.cmd.submit": "Envia uma solução em C para uma questão da practice ativa.",
         "help.cmd.switch": (
             "Escolhe a turma e depois a practice ativas em menus; informar o slug da turma pula o primeiro menu."

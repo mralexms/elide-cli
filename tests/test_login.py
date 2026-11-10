@@ -54,10 +54,24 @@ PRACTICES = [
 
 @pytest.fixture
 def api(monkeypatch):
-    monkeypatch.setattr(ApiClient, "login", lambda self, username, password: {"token": "newtoken"})
+    state = {"requested": [], "verified": [], "codes": {"482913"}}
+
+    def request_login_code(self, login):
+        state["requested"].append(login)
+        return {"detail": "...", "minutes": 10}
+
+    def verify_login_code(self, login, code):
+        state["verified"].append((login, code))
+        if code not in state["codes"]:
+            raise ApiError("Código inválido ou expirado.", status=400)
+        return {"token": "newtoken", "username": "alice"}
+
+    monkeypatch.setattr(ApiClient, "request_login_code", request_login_code)
+    monkeypatch.setattr(ApiClient, "verify_login_code", verify_login_code)
     monkeypatch.setattr(ApiClient, "list_classrooms", lambda self: CLASSROOMS)
     monkeypatch.setattr(ApiClient, "list_practices", lambda self: PRACTICES)
     monkeypatch.setattr(ApiClient, "start_practice", lambda self, slug: {"attempt": None})
+    return state
 
 
 @pytest.fixture
@@ -75,8 +89,111 @@ def menus(monkeypatch):
     return state
 
 
-def login(*extra):
-    return runner.invoke(app, ["login", "--username", "alice", "--password", "secret", *extra])
+def login(*extra, input="482913\n"):
+    return runner.invoke(app, ["login", "--login", "alice@example.com", *extra], input=input)
+
+
+def test_login_emails_a_code_and_trades_it_for_a_token(cli_config, api, monkeypatch):
+    from eliude_cli import prompts
+
+    monkeypatch.setattr(prompts, "is_interactive", lambda: False)
+    result = login()
+    assert result.exit_code == 0, result.output
+    assert api["requested"] == ["alice@example.com"]
+    assert api["verified"] == [("alice@example.com", "482913")]
+    assert "we sent a 6-digit code to its email. It's valid for 10 minutes." in result.output
+    assert f"{cli_config.get_base_url()}/cli-code/" in result.output
+    assert "Logged in as alice." in result.output
+    # O usuário salvo é o que o servidor devolve, não o email digitado.
+    assert cli_config.get_token() == "newtoken"
+    assert cli_config.get_username() == "alice"
+
+
+def test_asks_for_the_login_when_not_given(cli_config, api, monkeypatch):
+    from eliude_cli import prompts
+
+    monkeypatch.setattr(prompts, "is_interactive", lambda: False)
+    result = runner.invoke(app, ["login"], input="alice\n482913\n")
+    assert result.exit_code == 0, result.output
+    assert "Email or username" in result.output
+    assert api["requested"] == ["alice"]
+
+
+def test_a_wrong_code_can_be_typed_again(cli_config, api, monkeypatch):
+    from eliude_cli import prompts
+
+    monkeypatch.setattr(prompts, "is_interactive", lambda: False)
+    result = login(input="111111\n482913\n")
+    assert result.exit_code == 0, result.output
+    assert "Invalid or expired code." in result.output
+    assert [code for _, code in api["verified"]] == ["111111", "482913"]
+
+
+def test_gives_up_after_three_wrong_codes(cli_config, api):
+    result = login(input="1\n2\n3\n")
+    assert result.exit_code == 1
+    assert len(api["verified"]) == 3
+    assert "Run `eliude login` again" in result.output
+    assert cli_config.get_token() is None
+
+
+def test_a_code_given_up_front_skips_the_email(cli_config, api, monkeypatch):
+    from eliude_cli import prompts
+
+    monkeypatch.setattr(prompts, "is_interactive", lambda: False)
+    result = login("--code", "482913", input="")
+    assert result.exit_code == 0, result.output
+    assert api["requested"] == []
+    assert cli_config.get_token() == "newtoken"
+
+
+def test_a_wrong_code_given_up_front_is_not_asked_again(cli_config, api):
+    result = login("--code", "000000", input="")
+    assert result.exit_code == 1
+    assert len(api["verified"]) == 1
+
+
+def test_no_email_asks_for_a_web_code_without_sending_one(cli_config, api, monkeypatch):
+    from eliude_cli import prompts
+
+    monkeypatch.setattr(prompts, "is_interactive", lambda: False)
+    result = login("--no-email")
+    assert result.exit_code == 0, result.output
+    assert api["requested"] == []
+    assert api["verified"] == [("alice@example.com", "482913")]
+
+
+def test_email_unavailable_points_at_the_web_code(cli_config, api, monkeypatch):
+    def unavailable(self, login):
+        raise ApiError("The Eliude server ran into an error (HTTP 503).", status=503)
+
+    monkeypatch.setattr(ApiClient, "request_login_code", unavailable)
+    result = login()
+    assert result.exit_code == 1
+    assert "Couldn't send the email right now." in result.output
+    assert "eliude login --no-email" in result.output
+    assert api["verified"] == []
+
+
+def test_other_request_errors_are_shown_as_is(cli_config, api, monkeypatch):
+    def throttled(self, login):
+        raise ApiError("Too many requests. Wait a moment and try again.")
+
+    monkeypatch.setattr(ApiClient, "request_login_code", throttled)
+    result = login()
+    assert result.exit_code == 1
+    assert "Too many requests." in result.output
+
+
+def test_portuguese_messages(cli_config, api, monkeypatch):
+    from eliude_cli import prompts
+
+    monkeypatch.setenv("ELIUDE_LANGUAGE", "pt")
+    monkeypatch.setattr(prompts, "is_interactive", lambda: False)
+    result = login(input="111111\n482913\n")
+    assert result.exit_code == 0, result.output
+    assert "enviamos um código de 6 dígitos" in result.output
+    assert "Código inválido ou expirado." in result.output
 
 
 def test_login_goes_straight_into_classroom_and_practice_menus(cli_config, api, menus):
@@ -97,139 +214,62 @@ def test_cancelling_the_menu_after_login_keeps_the_login(cli_config, api, menus)
     assert "You can choose your classroom and practice later with `eliude switch`." in result.output
 
 
-def test_temporary_password_after_login_explains_instead_of_failing(cli_config, api, menus, monkeypatch):
-    def forbidden(self):
-        raise ApiError("You must change your temporary password before continuing. Run `eliude change-password`.")
-
-    monkeypatch.setattr(ApiClient, "list_classrooms", forbidden)
-    result = login()
-    assert result.exit_code == 0, result.output
-    assert menus["shown"] == []
-    assert "eliude change-password" in result.output
-    assert cli_config.get_token() == "newtoken"
-
-
 def test_login_outside_a_terminal_opens_no_menus(cli_config, api, monkeypatch):
     from eliude_cli import prompts
 
     monkeypatch.setattr(prompts, "is_interactive", lambda: False)
     result = login()
     assert result.exit_code == 0
-    assert result.output.strip() == "Logged in as alice."
+    assert result.output.strip().endswith("Logged in as alice.")
     assert cli_config.get_active_classroom() is None
 
 
-def test_failed_login_opens_no_menus(cli_config, menus, monkeypatch):
-    def bad_credentials(self, username, password):
-        raise ApiError("Invalid credentials.")
-
-    monkeypatch.setattr(ApiClient, "login", bad_credentials)
-    result = login()
+def test_failed_login_opens_no_menus(cli_config, api, menus):
+    result = login(input="1\n2\n3\n")
     assert result.exit_code == 1
     assert menus["shown"] == []
 
 
-def test_failed_login_points_at_the_web_password_page(cli_config, monkeypatch):
-    def bad_credentials(self, username, password):
-        raise ApiError("Invalid credentials.")
+def test_client_sends_the_login_and_the_code(monkeypatch):
+    import requests
 
-    monkeypatch.setattr(ApiClient, "login", bad_credentials)
-    result = login()
-    assert result.exit_code == 1
-    assert f"{cli_config.get_base_url()}/password/" in result.output
+    from eliude_cli.client import ApiClient as RealClient
 
+    calls = []
 
-def test_wrong_password_gets_a_plain_message(cli_config, monkeypatch):
-    def bad_credentials(self, username, password):
-        raise ApiError("non_field_errors: Unable to log in with provided credentials.", status=400)
+    class FakeResponse:
+        status_code = 200
+        history = []
+        text = ""
 
-    monkeypatch.setattr(ApiClient, "login", bad_credentials)
-    result = login()
-    assert result.exit_code == 1
-    assert "Wrong username or password." in result.output
-    assert "non_field_errors" not in result.output
+        def json(self):
+            return {"token": "t", "username": "alice"}
 
+    def fake_request(self, method, url, **kw):
+        calls.append((method, url, kw.get("data")))
+        return FakeResponse()
 
-# --- temporary password (teacher-registered accounts) ---
-
-
-@pytest.fixture
-def temporary(monkeypatch, api):
-    monkeypatch.setattr(
-        ApiClient, "login", lambda self, username, password: {"token": "newtoken", "must_change_password": True}
-    )
-    state = {"changes": [], "refuse": 0}
-
-    def change_password(self, current, new, confirm):
-        state["changes"].append((current, new, confirm))
-        if state["refuse"]:
-            state["refuse"] -= 1
-            raise ApiError("new_password: This password is too short.")
-
-    monkeypatch.setattr(ApiClient, "change_password", change_password)
-    return state
+    monkeypatch.setattr(requests.Session, "request", fake_request)
+    client = RealClient("http://x")
+    client.request_login_code("alice")
+    client.verify_login_code("alice", "123456")
+    assert calls == [
+        ("POST", "http://x/api/auth/code/", {"login": "alice"}),
+        ("POST", "http://x/api/auth/code/verify/", {"login": "alice", "code": "123456"}),
+    ]
 
 
-def test_temporary_password_is_replaced_right_at_login(cli_config, menus, temporary):
-    menus["answers"] = ["turma-a", "lista-1"]
-    result = runner.invoke(app, ["login", "--username", "alice", "--password", "secret"], input="nova-senha-1\nnova-senha-1\n")
-    assert result.exit_code == 0, result.output
-    assert "Your password is temporary." in result.output
-    assert temporary["changes"] == [("secret", "nova-senha-1", "nova-senha-1")]
-    assert menus["shown"] == ["Choose a classroom:", "Choose a practice:"]
-
-
-def test_refused_new_password_asks_again(cli_config, menus, temporary):
-    temporary["refuse"] = 1
-    menus["answers"] = ["turma-a", "lista-1"]
-    result = runner.invoke(app, ["login", "--username", "alice", "--password", "secret"], input="curta\ncurta\nnova-senha-1\nnova-senha-1\n")
-    assert result.exit_code == 0, result.output
-    assert "too short" in result.output
-    assert [new for _, new, _ in temporary["changes"]] == ["curta", "nova-senha-1"]
-
-
-def test_mismatched_new_password_is_not_sent(cli_config, menus, temporary):
-    menus["answers"] = ["turma-a", "lista-1"]
-    result = runner.invoke(app, ["login", "--username", "alice", "--password", "secret"], input="uma-senha-1\noutra-senha\nnova-senha-1\nnova-senha-1\n")
-    assert result.exit_code == 0, result.output
-    assert temporary["changes"] == [("secret", "nova-senha-1", "nova-senha-1")]
-
-
-def test_gives_up_after_three_refused_passwords(cli_config, menus, temporary):
-    temporary["refuse"] = 3
-    result = runner.invoke(app, ["login", "--username", "alice", "--password", "secret"], input="a\na\nb\nb\nc\nc\n")
-    assert result.exit_code == 0, result.output
-    assert len(temporary["changes"]) == 3
-    assert "eliude change-password" in result.output
-    assert menus["shown"] == []
-    assert cli_config.get_token() == "newtoken"
-
-
-def test_temporary_password_outside_a_terminal_only_explains(cli_config, temporary, monkeypatch):
-    from eliude_cli import prompts
-
-    monkeypatch.setattr(prompts, "is_interactive", lambda: False)
-    result = login()
-    assert result.exit_code == 0, result.output
-    assert temporary["changes"] == []
-    assert "eliude change-password" in result.output
-
-
-def test_server_403_for_temporary_password_is_translated(cli_config, monkeypatch):
+def test_a_server_error_keeps_its_status(monkeypatch):
     import requests
 
     from eliude_cli.client import ApiClient as RealClient
 
     class FakeResponse:
-        status_code = 403
+        status_code = 503
         history = []
         text = ""
 
-        def json(self):
-            return {"detail": "You must change your temporary password...", "code": "must_change_password"}
-
-    monkeypatch.setenv("ELIUDE_LANGUAGE", "pt")
     monkeypatch.setattr(requests.Session, "request", lambda self, method, url, **kw: FakeResponse())
     with pytest.raises(ApiError) as exc_info:
-        RealClient("http://x", token="t").list_classrooms()
-    assert str(exc_info.value).startswith("Você precisa trocar sua senha temporária")
+        RealClient("http://x").request_login_code("alice")
+    assert exc_info.value.status == 503
