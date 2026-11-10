@@ -341,3 +341,33 @@ def test_show_download_refuses_paths_outside_the_folder(logged_in_with_classroom
     result = runner.invoke(app, ["show", "q1", "--download"])
     assert result.exit_code == 1
     assert not (tmp_path / "fora.c").exists()
+
+
+def test_show_on_a_terminal_puts_samples_side_by_side(logged_in_with_classroom, mock_crlf_question, monkeypatch):
+    from eliude_cli import display
+
+    shown = {}
+
+    def fake_show(render):
+        from rich.console import Console
+        import io
+
+        console = Console(file=io.StringIO(), width=80, color_system=None)
+        render(console, True)
+        shown["text"] = console.file.getvalue()
+
+    monkeypatch.setattr(display, "show", fake_show)
+    result = runner.invoke(app, ["questions", "show", "soma"])
+    assert result.exit_code == 0
+    text = "\n".join(line.rstrip() for line in shown["text"].splitlines())
+    assert (
+        "  Example 1\n"
+        "  ╭───────┬─────────────────╮\n"
+        "  │ Input │ Expected output │\n"
+        "  ├───────┼─────────────────┤\n"
+        "  │ 1     │ 3               │\n"
+        "  │ 2     │                 │\n"
+        "  ╰───────┴─────────────────╯\n"
+        "  Example 2\n"
+    ) in text
+    assert "  │ (empty) │ 0               │" in text

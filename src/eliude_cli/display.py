@@ -14,8 +14,13 @@ import sys
 from shutil import get_terminal_size
 from typing import Callable
 
+from rich import box
+from rich.cells import cell_len
 from rich.console import Console
 from rich.markdown import Markdown
+from rich.padding import Padding
+from rich.table import Table
+from rich.text import Text
 
 # Wider than this, Markdown paragraphs get hard to read.
 MAX_WIDTH = 100
@@ -57,6 +62,29 @@ def statement(text: str, console: Console) -> StatementMarkdown:
     theme = "ansi_dark" if console.color_system == "standard" else "monokai"
     # No OSC 8 links: older `less` shows them as garbage.
     return StatementMarkdown(text, code_theme=theme, hyperlinks=False)
+
+
+def sample_table(stdin: str, expected: str, labels: tuple[str, str], empty: str, width: int, indent: int = 2):
+    """A sample test case as two columns, input beside expected output, or
+    None when some line doesn't fit its column: folding it would look like
+    a line break that isn't there, so the caller prints them one under the
+    other instead. `stdin`/`expected` already have plain newlines."""
+    # Rounded box, one space of padding on each side: 3 borders + 4 spaces.
+    column = (width - indent - 7) // 2
+    if any(cell_len(label) > column for label in labels):
+        return None
+    cells = []
+    for value in (stdin, expected):
+        lines = value.rstrip("\n").split("\n")
+        if any(cell_len(line) > column for line in lines):
+            return None
+        cells.append(Text(value.rstrip("\n")) if value.strip("\n") else Text(empty, style="dim"))
+
+    table = Table(box=box.ROUNDED, header_style="bold", show_lines=False, pad_edge=True)
+    for label in labels:
+        table.add_column(label, no_wrap=True, overflow="ignore")
+    table.add_row(*cells)
+    return Padding(table, (0, 0, 0, indent))
 
 
 def _console(**kwargs) -> Console:

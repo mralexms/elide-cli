@@ -121,3 +121,36 @@ def test_no_pager_on_windows(clean_env, monkeypatch, fake_pager):
     monkeypatch.setattr(display.sys, "platform", "win32")
     monkeypatch.setattr(display.sys, "stdout", FakeStdout(tty=True))
     assert display._pager_command() is None
+
+
+def render_table(table, width=80):
+    from rich.console import Console
+
+    console = Console(file=io.StringIO(), width=width, color_system=None)
+    console.print(table)
+    return "\n".join(line.rstrip() for line in console.file.getvalue().splitlines())
+
+
+LABELS = ("Entrada", "Saída esperada")
+
+
+def test_sample_table_puts_input_beside_expected_output():
+    table = display.sample_table("3\n1 2 3\n", "6\n", LABELS, "(vazia)", 80)
+    assert render_table(table) == (
+        "  ╭─────────┬────────────────╮\n"
+        "  │ Entrada │ Saída esperada │\n"
+        "  ├─────────┼────────────────┤\n"
+        "  │ 3       │ 6              │\n"
+        "  │ 1 2 3   │                │\n"
+        "  ╰─────────┴────────────────╯"
+    )
+
+
+def test_sample_table_marks_an_empty_input():
+    assert "│ (vazia) │ 0" in render_table(display.sample_table("", "0\n", LABELS, "(vazia)", 80))
+
+
+def test_no_table_when_a_line_would_have_to_fold():
+    # Folding would look like a line break that isn't in the test case.
+    assert display.sample_table("x" * 40 + "\n", "ok\n", LABELS, "(vazia)", 80) is None
+    assert display.sample_table("a\n", "b\n", LABELS, "(vazia)", 30) is None  # labels don't fit either
