@@ -100,6 +100,18 @@ def _print_question(console: Console, question: dict, formatted: bool) -> None:
         console.print(t("questions.sample_test_cases_header"), style="bold")
         for n, tc in enumerate(samples, start=1):
             console.print(f"  {t('questions.sample_n', n=n)}")
+            table = None
+            if formatted:
+                table = display.sample_table(
+                    normalize_newlines(tc["stdin_data"]),
+                    normalize_newlines(tc["expected_stdout"]),
+                    (t("questions.input_column"), t("questions.expected_column")),
+                    t("questions.empty_value"),
+                    console.width,
+                )
+            if table is not None:
+                console.print(table)
+                continue
             _print_block(console, t("questions.input_header"), tc["stdin_data"])
             _print_block(console, t("questions.expected_header"), tc["expected_stdout"])
 
