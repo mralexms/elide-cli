@@ -183,7 +183,7 @@ def test_interactive_timed_practice_already_running_skips_the_confirm(logged_in_
     assert started == ["prova-1"]
 
 
-def test_interactive_menu_disables_practices_outside_their_window(logged_in_with_classroom, monkeypatch, started, interactive):
+def test_interactive_menu_disables_upcoming_and_moves_finished_to_their_own_entry(logged_in_with_classroom, monkeypatch, started, interactive):
     practices = [
         dict(FAKE_PRACTICES[0]),
         dict(FAKE_PRACTICES[0], slug="futura", title="Futura", window_status="upcoming"),
@@ -192,14 +192,111 @@ def test_interactive_menu_disables_practices_outside_their_window(logged_in_with
     monkeypatch.setattr(ApiClient, "list_practices", lambda self: practices)
     interactive["answers"] = ["turma-a-exercicios"]
     runner.invoke(app, ["practices", "switch"])
-    reasons = {o.value: o.disabled_reason for o in interactive["menus"][0]["options"]}
-    assert reasons == {"turma-a-exercicios": None, "futura": "not open yet", "velha": "closed"}
+    options = interactive["menus"][0]["options"]
+    reasons = {o.value: o.disabled_reason for o in options[:2]}
+    assert reasons == {"turma-a-exercicios": None, "futura": "not open yet"}
+    assert len(options) == 3
+    assert options[2].label == "Finished practices (1)"
+    assert options[2].disabled_reason is None
 
 
 def test_interactive_menu_with_nothing_open_explains_instead_of_prompting(logged_in_with_classroom, monkeypatch, interactive):
-    closed = [dict(FAKE_PRACTICES[0], window_status="closed")]
-    monkeypatch.setattr(ApiClient, "list_practices", lambda self: closed)
+    upcoming = [dict(FAKE_PRACTICES[0], window_status="upcoming")]
+    monkeypatch.setattr(ApiClient, "list_practices", lambda self: upcoming)
     result = runner.invoke(app, ["practices", "switch"])
     assert result.exit_code == 1
     assert interactive["menus"] == []
     assert "No practice in this classroom is open right now." in result.output
+
+
+# --- finished practices (read-only) ---
+
+FINISHED = [
+    dict(FAKE_PRACTICES[0]),
+    dict(FAKE_PRACTICES[1], slug="prova-velha", title="Prova velha", window_status="closed"),
+]
+
+
+@pytest.fixture
+def with_finished(monkeypatch):
+    monkeypatch.setattr(ApiClient, "list_practices", lambda self: FINISHED)
+
+
+def test_choosing_a_finished_practice_activates_it_read_only_without_starting(logged_in_with_classroom, with_finished, started, interactive, monkeypatch):
+    from eliude_cli import prompts
+
+    menus = []
+
+    def select(message, options, default=None):
+        menus.append(options)
+        # First the "Finished practices (1)" entry, then the practice itself.
+        return options[-1].value if len(menus) == 1 else "prova-velha"
+
+    monkeypatch.setattr(prompts, "select", select)
+    result = runner.invoke(app, ["practices", "switch"])
+    assert result.exit_code == 0, result.output
+    assert started == []  # no start, so no attempt in a finished exam
+    assert interactive["confirms"] == []  # nor the "the clock starts" question
+    assert logged_in_with_classroom.get_active_practice() == "prova-velha"
+    assert "but not submit" in result.output
+    assert [o.value for o in menus[1][:-1]] == ["prova-velha"]
+    assert menus[1][-1].label == "Back"
+
+
+def test_back_from_the_finished_menu_returns_to_the_main_menu(logged_in_with_classroom, with_finished, started, interactive, monkeypatch):
+    from eliude_cli import prompts
+
+    calls = []
+
+    def select(message, options, default=None):
+        calls.append(options)
+        if len(calls) == 1:
+            return options[-1].value  # "Finished practices (1)"
+        if len(calls) == 2:
+            return options[-1].value  # "Back"
+        return "turma-a-exercicios"
+
+    monkeypatch.setattr(prompts, "select", select)
+    result = runner.invoke(app, ["practices", "switch"])
+    assert result.exit_code == 0, result.output
+    assert len(calls) == 3
+    assert started == ["turma-a-exercicios"]
+
+
+def test_menu_shows_up_with_only_finished_practices(logged_in_with_classroom, monkeypatch, started, interactive):
+    only_finished = [FINISHED[1]]
+    monkeypatch.setattr(ApiClient, "list_practices", lambda self: only_finished)
+    from eliude_cli import prompts
+
+    picks = []
+
+    def select(message, options, default=None):
+        picks.append([o.label for o in options])
+        return options[0].value
+
+    monkeypatch.setattr(prompts, "select", select)
+    result = runner.invoke(app, ["practices", "switch"])
+    assert result.exit_code == 0, result.output
+    assert picks[0] == ["Finished practices (1)"]
+    assert logged_in_with_classroom.get_active_practice() == "prova-velha"
+    assert started == []
+
+
+def test_switch_by_slug_to_a_finished_practice_is_read_only(logged_in_with_classroom, with_finished, started):
+    result = runner.invoke(app, ["practices", "switch", "prova-velha"])
+    assert result.exit_code == 0, result.output
+    assert started == []
+    assert logged_in_with_classroom.get_active_practice() == "prova-velha"
+    assert "but not submit" in result.output
+
+
+def test_list_puts_finished_practices_under_their_own_heading(logged_in_with_classroom, with_finished):
+    result = runner.invoke(app, ["practices", "list"])
+    assert result.exit_code == 0
+    heading = result.output.index("Finished practices (read-only):")
+    assert result.output.index("turma-a-exercicios") < heading < result.output.index("prova-velha")
+
+
+def test_list_with_only_open_practices_has_no_finished_heading(logged_in_with_classroom, mock_practices):
+    result = runner.invoke(app, ["practices", "list"])
+    assert "Finished practices" not in result.output

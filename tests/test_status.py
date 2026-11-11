@@ -109,3 +109,23 @@ def test_status_all_shows_every_classroom_and_practice(logged_in_with_practice, 
     assert "Exercícios (turma-b-exercicios)" in result.output
     assert "Score: 33.3% (1/3)" in result.output
     assert "Score: 100.0% (1/1)" in result.output
+
+
+def test_status_marks_a_finished_active_practice(logged_in_with_practice, mock_backend, monkeypatch):
+    finished = {"turma-a": [{"slug": "turma-a-exercicios", "title": "Exercícios", "window_status": "closed"}]}
+    monkeypatch.setattr(
+        ApiClient, "list_practices", lambda self: finished[self.session.headers["X-Eliude-Classroom"]]
+    )
+    result = runner.invoke(app, ["status"])
+    assert "Practice: turma-a-exercicios (finished, read-only)" in result.output
+
+
+def test_status_all_marks_finished_practices(logged_in_with_practice, mock_backend, monkeypatch):
+    by_classroom = dict(PRACTICES_BY_CLASSROOM)
+    by_classroom["turma-b"] = [{"slug": "turma-b-exercicios", "title": "Exercícios", "window_status": "closed"}]
+    monkeypatch.setattr(
+        ApiClient, "list_practices", lambda self: by_classroom[self.session.headers["X-Eliude-Classroom"]]
+    )
+    result = runner.invoke(app, ["status", "--all"])
+    assert "Exercícios (turma-b-exercicios) — finished, read-only" in result.output
+    assert "Exercícios (turma-a-exercicios)\n" in result.output

@@ -4,9 +4,16 @@ from .messages import t
 
 
 class ApiError(Exception):
-    def __init__(self, message: str, status: int | None = None):
+    def __init__(self, message: str, status: int | None = None, code: str | None = None):
         super().__init__(message)
         self.status = status
+        # The backend's error code, when it sends one (e.g. "practice_finished").
+        self.code = code
+
+
+# Error codes the backend sends in the body ({"detail": ..., "code": ...})
+# that get a message of their own, in the CLI's language.
+_CODE_MESSAGES = {"practice_finished": "api.practice_finished"}
 
 
 class ApiClient:
@@ -42,7 +49,10 @@ class ApiClient:
         if response.status_code == 401:
             raise ApiError(t("api.not_logged_in"))
         if response.status_code in (400, 403):
-            raise ApiError(self._format_validation_errors(response), status=response.status_code)
+            code = self._error_code(response)
+            if code in _CODE_MESSAGES:
+                raise ApiError(t(_CODE_MESSAGES[code]), status=response.status_code, code=code)
+            raise ApiError(self._format_validation_errors(response), status=response.status_code, code=code)
         if response.status_code == 404:
             raise ApiError(t("api.not_found"))
         if response.status_code == 429:
@@ -54,13 +64,22 @@ class ApiClient:
         return response
 
     @staticmethod
+    def _error_code(response) -> str | None:
+        try:
+            body = response.json()
+        except ValueError:
+            return None
+        code = body.get("code") if isinstance(body, dict) else None
+        return code if isinstance(code, str) else None
+
+    @staticmethod
     def _format_validation_errors(response) -> str:
         try:
             body = response.json()
         except ValueError:
             return response.text
         if isinstance(body, dict):
-            if set(body.keys()) == {"detail"}:
+            if set(body.keys()) in ({"detail"}, {"detail", "code"}):
                 return str(body["detail"])
             parts = [f"{field}: {', '.join(msgs) if isinstance(msgs, list) else msgs}" for field, msgs in body.items()]
             return "; ".join(parts)

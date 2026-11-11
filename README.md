@@ -65,6 +65,10 @@ eliude config set-language en
 
 Colors are 256 by default, which PuTTY, macOS Terminal and most terminals support even when `TERM` doesn't say so. Set `ELIUDE_COLORS` to `16`, `256`, `truecolor` or `none` to change it; `NO_COLOR` also turns colors off.
 
+## Finished practices
+
+A practice finishes when the teacher closes it or its deadline passes. It no longer accepts submissions, but you can still read it: in the practice menu (`eliude switch` or `eliude practices switch`), the finished ones are behind the "Finished practices (N)" entry; `eliude practices switch <slug>` also works. With a finished practice active, `eliude questions list`, `eliude show` and `eliude get` work as usual, and `eliude submit` explains that it no longer takes submissions. A timed exam you ran out of time on stays locked until the window closes for everyone.
+
 ## Version compatibility
 
 Every time you run a command, the CLI checks that its version matches exactly what your configured server declares as compatible. If it doesn't match — either direction — the command is refused and the CLI prints the exact command to reinstall the right version, e.g.:
