@@ -117,6 +117,27 @@ def test_falls_back_to_printing_when_the_pager_is_missing(clean_env, monkeypatch
     assert "Soma" in out.getvalue() and "**" not in out.getvalue()
 
 
+@pytest.mark.parametrize("exit_code", [1, 127])
+def test_falls_back_to_printing_when_the_pager_fails(clean_env, monkeypatch, exit_code):
+    class FailingPager(FakePager):
+        def wait(self):
+            return exit_code
+
+    FakePager.calls = []
+    out = FakeStdout(tty=True)
+    monkeypatch.setattr(display.sys, "stdout", out)
+    monkeypatch.setattr(display.subprocess, "Popen", FailingPager)
+    display.show(render_statement)
+    assert "Soma" in out.getvalue() and "**" not in out.getvalue()
+
+
+def test_a_pager_that_succeeds_is_not_followed_by_a_second_copy(clean_env, monkeypatch, fake_pager):
+    out = FakeStdout(tty=True)
+    monkeypatch.setattr(display.sys, "stdout", out)
+    display.show(render_statement)
+    assert out.getvalue() == ""
+
+
 def test_no_pager_on_windows(clean_env, monkeypatch, fake_pager):
     monkeypatch.setattr(display.sys, "platform", "win32")
     monkeypatch.setattr(display.sys, "stdout", FakeStdout(tty=True))

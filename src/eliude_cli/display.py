@@ -119,6 +119,10 @@ def _pager_command() -> list[str] | None:
 
 
 def _run_pager(command: list[str], text: str) -> bool:
+    """Pipes `text` into the pager. False when it couldn't show it: the
+    program doesn't exist or exited with an error (a broken PAGER, say), so
+    the caller prints the text instead. `less` itself exits 0 even when the
+    student quits early or LESS has an unknown option."""
     env = dict(os.environ)
     # Like git: quit if it fits one screen (F), keep colours (R), leave the
     # text on the screen after quitting (X). A LESS of the user's own wins.
@@ -136,8 +140,7 @@ def _run_pager(command: list[str], text: str) -> bool:
         pass
     while True:
         try:
-            process.wait()
-            return True
+            return process.wait() == 0
         except KeyboardInterrupt:
             # Ctrl+C is the pager's business; wait for it to quit.
             pass
