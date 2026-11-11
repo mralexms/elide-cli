@@ -171,3 +171,15 @@ def test_single_file_is_refused_for_a_project(logged_in_with_practice, source_fi
     assert result.exit_code == 1
     assert "src/pilha.c" in result.output
     assert sent == []
+
+
+def test_submit_to_a_finished_practice_explains_what_still_works(logged_in_with_practice, source_file, monkeypatch):
+    from eliude_cli.client import ApiError
+
+    def refuse(self, slug, files):
+        raise ApiError("This practice has finished and no longer accepts submissions. ...", 403, "practice_finished")
+
+    monkeypatch.setattr(ApiClient, "submit", refuse)
+    result = runner.invoke(app, ["submit", "q1", str(source_file)])
+    assert result.exit_code == 1
+    assert "no longer accepts submissions" in result.output

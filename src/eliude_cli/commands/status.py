@@ -4,6 +4,7 @@ from .. import config
 from ..client import ApiClient, ApiError
 from ..messages import t
 from ..session import anonymous_client, require_client
+from .practices import is_finished
 
 
 def _print_server_status() -> None:
@@ -76,7 +77,10 @@ def status(
                 typer.echo(f"    {t('status.no_practices_yet')}")
                 continue
             for practice in practices:
-                typer.echo(f"    {practice['title']} ({practice['slug']})")
+                label = f"    {practice['title']} ({practice['slug']})"
+                if is_finished(practice):
+                    label += f" — {t('practices.finished_label')}"
+                typer.echo(label)
                 try:
                     questions = _fetch_questions(c["slug"], practice["slug"])
                 except ApiError as e:
@@ -99,7 +103,16 @@ def status(
         raise typer.Exit(code=1)
 
     typer.echo(t("status.classroom_label", name=match["name"], slug=match["slug"]))
-    typer.echo(t("status.practice_label", slug=active_practice_slug))
+    practice_label = t("status.practice_label", slug=active_practice_slug)
+    try:
+        finished = any(
+            p["slug"] == active_practice_slug and is_finished(p) for p in _fetch_practices(active_classroom_slug)
+        )
+    except ApiError:
+        finished = False  # only decides the label
+    if finished:
+        practice_label += f" ({t('practices.finished_label')})"
+    typer.echo(practice_label)
     try:
         questions = _fetch_questions(active_classroom_slug, active_practice_slug)
     except ApiError as e:

@@ -76,3 +76,23 @@ def test_success_is_returned_untouched(cli_config, monkeypatch):
     response = make_response(201, method="POST")
     stub_request(monkeypatch, client, response)
     assert client._request("POST", "/api/x/") is response
+
+
+def test_a_known_backend_error_code_gets_a_translated_message(cli_config, monkeypatch):
+    cli_config.set_language("pt-BR")
+    client = ApiClient(BASE_URL)
+    body = b'{"detail": "This practice has finished...", "code": "practice_finished"}'
+    stub_request(monkeypatch, client, make_response(403, method="POST", body=body))
+    with pytest.raises(ApiError, match="foi finalizada e não aceita mais envios") as raised:
+        client._request("POST", "/api/x/")
+    assert raised.value.code == "practice_finished"
+    assert raised.value.status == 403
+
+
+def test_an_unknown_backend_error_code_shows_the_detail(cli_config, monkeypatch):
+    client = ApiClient(BASE_URL)
+    body = b'{"detail": "Something else.", "code": "something_else"}'
+    stub_request(monkeypatch, client, make_response(403, body=body))
+    with pytest.raises(ApiError, match="^Something else.$") as raised:
+        client._request("GET", "/api/x/")
+    assert raised.value.code == "something_else"

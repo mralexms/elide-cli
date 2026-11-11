@@ -3,6 +3,10 @@ from . import config
 _MESSAGES = {
     "en": {
         # client.py
+        "api.practice_finished": (
+            "This practice has finished and no longer accepts submissions. You can still see its "
+            "questions (`eliude show`) and download your latest submission (`eliude get`)."
+        ),
         "api.unreachable": "Could not reach the Eliude server at {url}.",
         "api.timeout": "The Eliude server at {url} took too long to respond. Try again in a moment.",
         "api.request_failed": "Could not complete the request to the Eliude server at {url}.",
@@ -82,7 +86,15 @@ _MESSAGES = {
         "practices.time_limit_ends": "Time limit: ends at {ends_at}",
         "practices.choose": "Choose a practice:",
         "practices.window_upcoming": "not open yet",
-        "practices.window_closed": "closed",
+        "practices.finished_heading": "Finished practices (read-only):",
+        "practices.finished_menu": "Finished practices ({count})",
+        "practices.choose_finished": "Choose a finished practice to look at:",
+        "practices.back": "Back",
+        "practices.read_only": (
+            "'{title}' has finished: you can still see its questions (`eliude show`) and download your "
+            "latest submission (`eliude get`), but not submit."
+        ),
+        "practices.finished_label": "finished, read-only",
         "practices.none_open": "No practice in this classroom is open right now.",
         "practices.confirm_start_timed": (
             "'{title}' is timed ({minutes} min) and the clock starts as soon as you select it. Start now?"
@@ -118,6 +130,7 @@ _MESSAGES = {
         "prompt.cancelled": "Cancelled.",
         # commands/questions.py
         "questions.no_questions": "No questions available.",
+        "questions.read_only_notice": "This practice has finished: read-only, no more submissions.",
         "questions.last_submitted": "last submitted: {timestamp}",
         "questions.only_one_display_flag": (
             "Use only one of --caption, --input-sample, --output-sample at a time."
@@ -210,6 +223,10 @@ _MESSAGES = {
     },
     "pt-BR": {
         # client.py
+        "api.practice_finished": (
+            "Esta atividade foi finalizada e não aceita mais envios. Você ainda pode ver as questões "
+            "(`eliude show`) e baixar seu último envio (`eliude get`)."
+        ),
         "api.unreachable": "Não foi possível conectar ao servidor Eliude em {url}.",
         "api.timeout": "O servidor Eliude em {url} demorou demais para responder. Tente de novo em instantes.",
         "api.request_failed": "Não foi possível concluir a requisição ao servidor Eliude em {url}.",
@@ -292,7 +309,15 @@ _MESSAGES = {
         "practices.time_limit_ends": "Prazo: termina às {ends_at}",
         "practices.choose": "Escolha a practice:",
         "practices.window_upcoming": "ainda não abriu",
-        "practices.window_closed": "encerrada",
+        "practices.finished_heading": "Atividades finalizadas (somente consulta):",
+        "practices.finished_menu": "Atividades finalizadas ({count})",
+        "practices.choose_finished": "Escolha a atividade finalizada para consultar:",
+        "practices.back": "Voltar",
+        "practices.read_only": (
+            "A atividade '{title}' foi finalizada: você ainda pode ver as questões (`eliude show`) e baixar "
+            "seu último envio (`eliude get`), mas não enviar."
+        ),
+        "practices.finished_label": "finalizada, somente consulta",
         "practices.none_open": "Nenhuma practice desta turma está aberta agora.",
         "practices.confirm_start_timed": (
             "'{title}' tem tempo ({minutes} min) e o cronômetro começa assim que você selecionar. Começar agora?"
@@ -328,6 +353,7 @@ _MESSAGES = {
         "prompt.cancelled": "Cancelado.",
         # commands/questions.py
         "questions.no_questions": "Nenhuma questão disponível.",
+        "questions.read_only_notice": "Atividade finalizada: somente consulta, sem novos envios.",
         "questions.last_submitted": "última submissão: {timestamp}",
         "questions.only_one_display_flag": (
             "Use apenas uma opção por vez entre --caption, --input-sample e --output-sample."

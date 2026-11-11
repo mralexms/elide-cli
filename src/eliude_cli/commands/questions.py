@@ -9,6 +9,7 @@ from ..formatting import normalize_newlines
 from ..messages import t
 from ..project_files import ProjectFilesError, extra_patterns, is_project, required_files, write_tree
 from ..session import require_practice_client
+from .practices import active_is_finished
 
 _STATUS_COLORS = {
     "success": typer.colors.GREEN,
@@ -29,6 +30,9 @@ def list_questions(
     except ApiError as e:
         typer.secho(str(e), fg=typer.colors.RED)
         raise typer.Exit(code=1)
+
+    if active_is_finished(client):
+        typer.secho(t("questions.read_only_notice"), fg=typer.colors.YELLOW)
 
     if unsolved:
         questions = [q for q in questions if q.get("status", "pending") != "success"]
@@ -162,6 +166,8 @@ def show_question(
         return
 
     display.show(lambda console, formatted: _print_question(console, question, formatted))
+    if active_is_finished(client):
+        typer.secho(t("questions.read_only_notice"), fg=typer.colors.YELLOW)
 
     if download and question.get("files"):
         folder = Path(slug)

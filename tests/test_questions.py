@@ -371,3 +371,34 @@ def test_show_on_a_terminal_puts_samples_side_by_side(logged_in_with_classroom, 
         "  Example 2\n"
     ) in text
     assert "  │ (empty) │ 0               │" in text
+
+
+FINISHED_PRACTICE = [{"slug": "turma-a-exercicios", "title": "Exercícios", "window_status": "closed"}]
+
+
+def test_list_says_when_the_practice_has_finished(logged_in_with_classroom, mock_questions, monkeypatch):
+    monkeypatch.setattr(ApiClient, "list_practices", lambda self: FINISHED_PRACTICE)
+    result = runner.invoke(app, ["questions", "list"])
+    assert result.exit_code == 0
+    assert "read-only" in result.output
+    assert "hello-world" in result.output
+
+
+def test_list_of_an_open_practice_has_no_read_only_notice(logged_in_with_classroom, mock_questions, monkeypatch):
+    open_practice = [dict(FINISHED_PRACTICE[0], window_status="open")]
+    monkeypatch.setattr(ApiClient, "list_practices", lambda self: open_practice)
+    assert "read-only" not in runner.invoke(app, ["questions", "list"]).output
+
+
+def test_show_says_when_the_practice_has_finished(logged_in_with_classroom, mock_question_detail, monkeypatch):
+    monkeypatch.setattr(ApiClient, "list_practices", lambda self: FINISHED_PRACTICE)
+    result = runner.invoke(app, ["show", "q1"])
+    assert result.exit_code == 0
+    assert "Say hello." in result.output
+    assert "read-only" in result.output
+
+
+def test_show_caption_stays_a_clean_comment_block_when_finished(logged_in_with_classroom, mock_question_detail, monkeypatch):
+    monkeypatch.setattr(ApiClient, "list_practices", lambda self: FINISHED_PRACTICE)
+    result = runner.invoke(app, ["show", "q1", "--caption"])
+    assert "read-only" not in result.output

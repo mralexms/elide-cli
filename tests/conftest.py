@@ -41,3 +41,12 @@ def _default_to_english(monkeypatch):
     monkeypatch.delenv("LC_ALL", raising=False)
     monkeypatch.delenv("LC_MESSAGES", raising=False)
     monkeypatch.delenv("LANG", raising=False)
+
+
+@pytest.fixture(autouse=True)
+def _stub_practice_list(monkeypatch):
+    # `questions list`, `show` and `status` look the active practice up in
+    # the practice list to say when it has finished (read-only); without a
+    # stub that would be a real network call. Tests that need practices
+    # override list_practices with their own monkeypatch.
+    monkeypatch.setattr(ApiClient, "list_practices", lambda self: [])
