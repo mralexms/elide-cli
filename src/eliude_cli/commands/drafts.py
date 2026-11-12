@@ -111,7 +111,7 @@ def _starting_point(client: ApiClient, slug: str, question: dict) -> tuple[dict[
 
 
 def _keep(folder: Path, retry: Path, slug: str, can_retry: bool = True) -> None:
-    """Leaves the temporary folder behind and, when saving later can work,
+    """Leaves the files where they are and, when saving later can work,
     says how."""
     typer.secho(t("drafts.kept", folder=folder), fg=typer.colors.YELLOW)
     if can_retry:
@@ -119,35 +119,90 @@ def _keep(folder: Path, retry: Path, slug: str, can_retry: bool = True) -> None:
     raise typer.Exit(code=1)
 
 
-def load(slug: str) -> None:
+def _local_place(question: dict, path: Path, files: dict[str, str], overwrite: bool) -> tuple[Path, Path, dict[Path, str]]:
+    """Where `load q1 <path>` puts the files: (folder of the tree, what a
+    save reads back — the file itself or the folder, {file: content}). A
+    single-file question takes a file (or a folder, where the file goes by
+    its own name); a project, a folder. Asks before replacing a file whose
+    content differs."""
+    single = single_file_path(question)
+    if single is None and path.is_file():
+        _fail(t("files.needs_folder", files=", ".join(required_files(question))))
+    if single is not None and not path.is_dir():
+        # The student's own name for the file (q1.c) holds the one file.
+        targets = {path: next(iter(files.values()))}
+        folder, retry = path.parent, path
+    else:
+        targets = {path / relative: content for relative, content in files.items()}
+        folder = retry = path
+
+    differs = [
+        p for p, content in targets.items() if p.exists() and p.read_text(encoding="utf-8", errors="replace") != content
+    ]
+    if differs and not overwrite:
+        names = ", ".join(str(p) for p in differs)
+        if not prompts.is_interactive():
+            _fail(t("drafts.local_exists_no_terminal", files=names))
+        if not prompts.confirm(t("drafts.local_overwrite", files=names)):
+            typer.echo(t("prompt.cancelled"))
+            raise typer.Exit(code=1)
+    return folder, retry, targets
+
+
+def load(
+    slug: str,
+    path: Optional[Path] = typer.Argument(None, help=t("help.arg.load_path")),
+    overwrite: bool = typer.Option(False, "--overwrite", help=t("help.opt.load_overwrite")),
+) -> None:
     """Open your latest code for a question in your editor; saving it there
-    saves it on the server, without grading."""
+    saves it on the server, without grading. With a path, the code goes to
+    that file (or project folder), which stays there."""
     client = require_practice_client()
     question = _question(client, slug)
     files, version, origin = _starting_point(client, slug, question)
     read_only = active_is_finished(client)
-
-    folder = Path(tempfile.mkdtemp(prefix=f"eliude-{slug}-"))
     provided = {f["path"]: f["content"] for f in question.get("files", []) if f["path"] in provided_paths(question)}
+
+    temporary = path is None
+    folder = None
     try:
-        # The teacher's files too, so a project can be read (and built)
-        # whole; only the student's go back to the server.
-        write_tree(folder, {**provided, **files}, overwrite=True)
-    except ProjectFilesError as e:
-        shutil.rmtree(folder, ignore_errors=True)
+        if temporary:
+            folder = Path(tempfile.mkdtemp(prefix=f"eliude-{slug}-"))
+            # The teacher's files too, so a project can be read (and built)
+            # whole; only the student's go back to the server.
+            write_tree(folder, {**provided, **files}, overwrite=True)
+            single = single_file_path(question)
+            retry = folder / single if single else folder
+            opened = [folder / relative for relative in files]
+        else:
+            folder, retry, targets = _local_place(question, path, files, overwrite)
+            if retry == folder:
+                # Folder mode (a project): the teacher's files go in too, but
+                # a local copy that's already there is left alone.
+                write_tree(folder, provided, overwrite=False)
+            for target, content in targets.items():
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_text(content, encoding="utf-8")
+            opened = list(targets)
+    except (ProjectFilesError, OSError) as e:
+        if temporary and folder is not None:
+            shutil.rmtree(folder, ignore_errors=True)
         _fail(str(e))
 
-    single = single_file_path(question)
-    # What a failed save is retried from: the file itself, or the folder.
-    retry = folder / single if single else folder
+    def done() -> None:
+        if temporary:
+            shutil.rmtree(folder, ignore_errors=True)
+
     typer.echo(origin)
+    if not temporary:
+        typer.echo(t("drafts.written_to", path=retry))
     if read_only:
         typer.secho(t("drafts.read_only"), fg=typer.colors.YELLOW)
 
     try:
-        finished_normally = editor.edit([folder / path for path in files])
+        finished_normally = editor.edit(opened)
     except editor.EditorError:
-        shutil.rmtree(folder, ignore_errors=True)
+        done()
         _fail(t("drafts.no_editor"))
 
     try:
@@ -157,7 +212,7 @@ def load(slug: str) -> None:
         _keep(folder, retry, slug)
 
     if edited == files:
-        shutil.rmtree(folder, ignore_errors=True)
+        done()
         typer.echo(t("drafts.unchanged"))
         return
     if not finished_normally:
@@ -184,6 +239,6 @@ def load(slug: str) -> None:
             typer.secho(str(e2), fg=typer.colors.RED)
             _keep(folder, retry, slug)
 
-    shutil.rmtree(folder, ignore_errors=True)
+    done()
     typer.secho(t("drafts.saved", slug=slug), fg=typer.colors.GREEN)
     typer.echo(t("drafts.how_to_grade", slug=slug))

@@ -370,3 +370,89 @@ def test_notepad_opens_one_file_at_a_time(clean_editor_env, monkeypatch):
     monkeypatch.setattr(editor.subprocess, "run", lambda cmd: calls.append(cmd) or Done())
     editor.edit([Path("a.c"), Path("b.c")])
     assert calls == [["notepad", "a.c"], ["notepad", "b.c"]]
+
+
+# --- eliude load <questão> <arquivo> ---
+
+
+def test_load_into_a_new_local_file_keeps_it(logged_in, monkeypatch, tmp_path):
+    backend = Backend(monkeypatch, draft=DRAFT)
+    fake = FakeEditor(monkeypatch, change=append("// local\n"))
+    target = tmp_path / "q1.c"
+    result = runner.invoke(app, ["load", "q1", str(target)])
+    assert result.exit_code == 0, result.output
+    assert fake.opened == [[target]]
+    assert target.read_text() == "/* rascunho */\n// local\n"  # stays, unlike the temporary folder
+    assert backend.saves == [{"files": {"main.c": "/* rascunho */\n// local\n"}, "base_version": 3}]
+    assert f"Written to {target}" in result.output.replace("\n", "")
+
+
+def test_load_into_an_identical_file_does_not_ask(logged_in, monkeypatch, tmp_path):
+    Backend(monkeypatch, draft=DRAFT)
+    FakeEditor(monkeypatch)
+    target = tmp_path / "q1.c"
+    target.write_text("/* rascunho */\n")
+    result = runner.invoke(app, ["load", "q1", str(target)])
+    assert result.exit_code == 0, result.output
+    assert "No changes" in result.output
+
+
+def test_load_asks_before_replacing_a_different_local_file(logged_in, monkeypatch, tmp_path):
+    from eliude_cli import prompts
+
+    Backend(monkeypatch, draft=DRAFT)
+    fake = FakeEditor(monkeypatch)
+    target = tmp_path / "q1.c"
+    target.write_text("/* meu trabalho local */\n")
+    monkeypatch.setattr(prompts, "is_interactive", lambda: True)
+    monkeypatch.setattr(prompts, "confirm", lambda message, default=False: False)
+    result = runner.invoke(app, ["load", "q1", str(target)])
+    assert result.exit_code == 1
+    assert target.read_text() == "/* meu trabalho local */\n"
+    assert fake.opened == []
+
+
+def test_load_refuses_to_replace_without_a_terminal_unless_overwrite(logged_in, monkeypatch, tmp_path):
+    Backend(monkeypatch, draft=DRAFT)
+    FakeEditor(monkeypatch)
+    target = tmp_path / "q1.c"
+    target.write_text("/* meu trabalho local */\n")
+    refused = runner.invoke(app, ["load", "q1", str(target)])
+    assert refused.exit_code == 1
+    assert "--overwrite" in refused.output
+    assert target.read_text() == "/* meu trabalho local */\n"
+    replaced = runner.invoke(app, ["load", "q1", str(target), "--overwrite"])
+    assert replaced.exit_code == 0, replaced.output
+    assert target.read_text() == "/* rascunho */\n"
+
+
+def test_load_a_project_into_a_folder(logged_in, monkeypatch, tmp_path):
+    backend = Backend(monkeypatch, question=PROJECT_QUESTION)
+    fake = FakeEditor(monkeypatch, change=append("void empilha(int x) {}\n"))
+    folder = tmp_path / "q1"
+    result = runner.invoke(app, ["load", "q1", str(folder)])
+    assert result.exit_code == 0, result.output
+    assert fake.opened == [[folder / "src" / "pilha.c"]]
+    assert (folder / "include" / "pilha.h").read_text() == "void empilha(int);\n"
+    assert backend.saves[0]["files"] == {"src/pilha.c": "/* comece aqui */\nvoid empilha(int x) {}\n"}
+
+
+def test_load_a_project_into_a_file_is_refused(logged_in, monkeypatch, tmp_path):
+    Backend(monkeypatch, question=PROJECT_QUESTION)
+    FakeEditor(monkeypatch)
+    target = tmp_path / "q1.c"
+    target.write_text("x")
+    result = runner.invoke(app, ["load", "q1", str(target)])
+    assert result.exit_code == 1
+    assert "project folder" in result.output
+
+
+def test_a_failed_save_from_a_local_file_points_at_it(logged_in, monkeypatch, tmp_path):
+    backend = Backend(monkeypatch, draft=DRAFT)
+    backend.save_error = ApiError("Could not reach the Eliude server at http://x.")
+    FakeEditor(monkeypatch, change=append("// importante\n"))
+    target = tmp_path / "q1.c"
+    result = runner.invoke(app, ["load", "q1", str(target)])
+    assert result.exit_code == 1
+    assert target.read_text() == "/* rascunho */\n// importante\n"
+    assert f"eliude save q1 {target}" in result.output.replace("\n", "")
