@@ -65,6 +65,12 @@ eliude config set-language en
 
 Colors are 256 by default, which PuTTY, macOS Terminal and most terminals support even when `TERM` doesn't say so. Set `ELIUDE_COLORS` to `16`, `256`, `truecolor` or `none` to change it; `NO_COLOR` also turns colors off.
 
+## Saving without grading: `load` and `save`
+
+`eliude load q1` opens your latest code for a question in your editor: what you saved on the server, or your latest submission if it's newer, or the question's starting files. When you close the editor, if anything changed, it's saved on the server **without grading**. `eliude save q1 q1.c` (or `eliude save q1` for the `./q1/` project folder) does the same from your own files. Only `eliude submit` grades: `eliude submit q1 --draft` grades what's saved on the server, and `eliude get q1 --draft` shows it.
+
+The editor is `$VISUAL`, else `$EDITOR`, else the first of `vim`, `vi` and `nano` found (Notepad on Windows). A graphical editor has to wait for its window to close: `export EDITOR="code --wait"`. Exiting with an error (vim's `:cq`) saves nothing. If the save fails, or the code was saved somewhere else since you opened it, your files stay in a temporary folder and the CLI shows the `eliude save` command to send them later.
+
 ## Finished practices
 
 A practice finishes when the teacher closes it or its deadline passes. It no longer accepts submissions, but you can still read it: in the practice menu (`eliude switch` or `eliude practices switch`), the finished ones are behind the "Finished practices (N)" entry; `eliude practices switch <slug>` also works. With a finished practice active, `eliude questions list`, `eliude show` and `eliude get` work as usual, and `eliude submit` explains that it no longer takes submissions. A timed exam you ran out of time on stays locked until the window closes for everyone.

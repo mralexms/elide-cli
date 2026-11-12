@@ -4,11 +4,13 @@ from .messages import t
 
 
 class ApiError(Exception):
-    def __init__(self, message: str, status: int | None = None, code: str | None = None):
+    def __init__(self, message: str, status: int | None = None, code: str | None = None, data: dict | None = None):
         super().__init__(message)
         self.status = status
         # The backend's error code, when it sends one (e.g. "practice_finished").
         self.code = code
+        # The rest of the error body, e.g. the current version in a 409.
+        self.data = data or {}
 
 
 # Error codes the backend sends in the body ({"detail": ..., "code": ...})
@@ -54,7 +56,10 @@ class ApiClient:
                 raise ApiError(t(_CODE_MESSAGES[code]), status=response.status_code, code=code)
             raise ApiError(self._format_validation_errors(response), status=response.status_code, code=code)
         if response.status_code == 404:
-            raise ApiError(t("api.not_found"))
+            raise ApiError(t("api.not_found"), status=404)
+        if response.status_code == 409:
+            body = self._json_dict(response)
+            raise ApiError(str(body.get("detail", "")), status=409, code=self._error_code(response), data=body)
         if response.status_code == 429:
             raise ApiError(t("api.rate_limited"))
         if response.status_code >= 500:
@@ -62,6 +67,14 @@ class ApiClient:
         if response.status_code >= 400:
             raise ApiError(t("api.unexpected_status", status=response.status_code))
         return response
+
+    @staticmethod
+    def _json_dict(response) -> dict:
+        try:
+            body = response.json()
+        except ValueError:
+            return {}
+        return body if isinstance(body, dict) else {}
 
     @staticmethod
     def _error_code(response) -> str | None:
@@ -115,6 +128,25 @@ class ApiClient:
 
     def get_latest_submission(self, slug: str) -> dict:
         return self._request("GET", f"/api/practice-questions/{slug}/latest/").json()
+
+    def get_draft(self, slug: str) -> dict | None:
+        """The code saved without grading for a question, or None if there's
+        none: {"version", "updated_at", "files": [{"path", "content"}]}."""
+        try:
+            return self._request("GET", f"/api/practice-questions/{slug}/draft/").json()
+        except ApiError as e:
+            if e.status == 404:
+                return None
+            raise
+
+    def save_draft(self, slug: str, files: dict[str, str], base_version: int | None = None) -> dict:
+        """Saves the code without grading. With base_version (the version
+        that was opened, 0 for none), the server refuses with a 409
+        (code "draft_conflict") if someone saved since."""
+        payload: dict = {"files": files}
+        if base_version is not None:
+            payload["base_version"] = base_version
+        return self._request("PUT", f"/api/practice-questions/{slug}/draft/", json=payload).json()
 
     def list_classrooms(self) -> list[dict]:
         return self._request("GET", "/api/classrooms/").json()

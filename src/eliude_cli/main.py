@@ -8,6 +8,7 @@ from . import __version__
 from .commands import (
     classrooms,
     config_cmd,
+    drafts,
     get,
     login,
     practices,
@@ -68,6 +69,8 @@ app.command(name="logout", help=t("help.cmd.logout"))(login.logout)
 app.command(name="submit", help=t("help.cmd.submit"))(submit.submit)
 app.command(name="switch", help=t("help.cmd.switch"))(classrooms.switch)
 app.command(name="get", help=t("help.cmd.get"))(get.get)
+app.command(name="load", help=t("help.cmd.load"))(drafts.load)
+app.command(name="save", help=t("help.cmd.save"))(drafts.save)
 app.command(name="status", help=t("help.cmd.status"))(status.status)
 app.command(name="show", help=t("help.cmd.show"))(questions.show_question)
 

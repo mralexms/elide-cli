@@ -14,14 +14,31 @@ from ..session import require_practice_client
 def submit(
     slug: str,
     path: Optional[Path] = typer.Argument(None, exists=True, readable=True, help=t("help.arg.submit_path")),
+    draft: bool = typer.Option(False, "--draft", help=t("help.opt.submit_draft")),
 ) -> None:
     """Submit a C solution for a question in the active practice."""
+    if draft and path is not None:
+        typer.secho(t("submit.draft_and_path"), fg=typer.colors.RED)
+        raise typer.Exit(code=1)
     client = require_practice_client()
     try:
         question = client.get_question(slug)
     except ApiError as e:
         typer.secho(str(e), fg=typer.colors.RED)
         raise typer.Exit(code=1)
+
+    if draft:
+        # The code saved by `eliude save`/`eliude load`, graded as it is.
+        try:
+            saved = client.get_draft(slug)
+        except ApiError as e:
+            typer.secho(str(e), fg=typer.colors.RED)
+            raise typer.Exit(code=1)
+        if saved is None:
+            typer.secho(t("drafts.none", slug=slug), fg=typer.colors.RED)
+            raise typer.Exit(code=1)
+        _grade(client, slug, {f["path"]: f["content"] for f in saved["files"]})
+        return
 
     if path is None:
         # `eliude show <slug> --download` lays a project out in ./<slug>/.
@@ -42,6 +59,10 @@ def submit(
         for relative in files:
             typer.echo(f"  {relative}")
 
+    _grade(client, slug, files)
+
+
+def _grade(client, slug: str, files: dict[str, str]) -> None:
     try:
         with Console().status(t("submit.grading"), spinner="dots"):
             result = client.submit(slug, files)
