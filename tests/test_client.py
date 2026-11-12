@@ -96,3 +96,20 @@ def test_an_unknown_backend_error_code_shows_the_detail(cli_config, monkeypatch)
     with pytest.raises(ApiError, match="^Something else.$") as raised:
         client._request("GET", "/api/x/")
     assert raised.value.code == "something_else"
+
+
+def test_get_draft_returns_none_when_there_is_none(cli_config, monkeypatch):
+    client = ApiClient(BASE_URL)
+    stub_request(monkeypatch, client, make_response(404, body=b'{"detail": "Not found."}'))
+    assert client.get_draft("q1") is None
+
+
+def test_a_draft_conflict_carries_the_current_version(cli_config, monkeypatch):
+    client = ApiClient(BASE_URL)
+    body = b'{"detail": "saved elsewhere", "code": "draft_conflict", "version": 4, "updated_at": null}'
+    stub_request(monkeypatch, client, make_response(409, method="PUT", body=body))
+    with pytest.raises(ApiError) as raised:
+        client.save_draft("q1", {"main.c": "x"}, base_version=3)
+    assert raised.value.status == 409
+    assert raised.value.code == "draft_conflict"
+    assert raised.value.data["version"] == 4

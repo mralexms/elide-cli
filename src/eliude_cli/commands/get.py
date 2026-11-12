@@ -19,13 +19,17 @@ def get(
     slug: str,
     save: bool = typer.Option(False, "--save", help=t("help.opt.get_save")),
     overwrite: bool = typer.Option(False, "--overwrite", help=t("help.opt.get_overwrite")),
+    draft: bool = typer.Option(False, "--draft", help=t("help.opt.get_draft")),
 ) -> None:
     """Show your latest submission for a question in the active practice."""
     client = require_practice_client()
     try:
-        submission = client.get_latest_submission(slug)
+        submission = client.get_draft(slug) if draft else client.get_latest_submission(slug)
     except ApiError as e:
         typer.secho(str(e), fg=typer.colors.RED)
+        raise typer.Exit(code=1)
+    if submission is None:
+        typer.secho(t("drafts.none", slug=slug), fg=typer.colors.RED)
         raise typer.Exit(code=1)
 
     files = _submission_files(submission)
@@ -48,7 +52,7 @@ def get(
                 target = Path(typer.prompt(t("get.enter_filename_prompt")))
 
         target.write_text(next(iter(files.values())))
-        typer.secho(t("get.saved", slug=slug, target=target), fg=typer.colors.GREEN)
+        typer.secho(t("get.saved_draft" if draft else "get.saved", slug=slug, target=target), fg=typer.colors.GREEN)
         return
 
     # A project goes back to ./<slug>/, the folder `eliude submit` reads.
@@ -63,4 +67,5 @@ def get(
     except ProjectFilesError as e:
         typer.secho(str(e), fg=typer.colors.RED)
         raise typer.Exit(code=1)
-    typer.secho(t("get.saved_folder", slug=slug, count=len(files), folder=folder), fg=typer.colors.GREEN)
+    key = "get.saved_folder_draft" if draft else "get.saved_folder"
+    typer.secho(t(key, slug=slug, count=len(files), folder=folder), fg=typer.colors.GREEN)
