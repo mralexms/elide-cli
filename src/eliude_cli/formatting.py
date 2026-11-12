@@ -1,6 +1,25 @@
+from datetime import datetime
+
 import typer
 
 from .messages import t
+
+
+def parse_time(value: str | None) -> datetime | None:
+    """A timestamp from the API, or None if missing or unreadable."""
+    if not value:
+        return None
+    try:
+        # Python 3.10's fromisoformat doesn't take a trailing "Z".
+        return datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+
+
+def short_time(value: str | None) -> str:
+    """A timestamp from the API as local day and time ("12/11, 14h32")."""
+    moment = parse_time(value)
+    return moment.astimezone().strftime(t("drafts.time_format")) if moment else "?"
 
 
 def normalize_newlines(text: str) -> str:

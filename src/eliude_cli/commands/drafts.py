@@ -11,7 +11,6 @@ its path is shown: the student's work is never thrown away.
 
 import shutil
 import tempfile
-from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
@@ -19,6 +18,7 @@ import typer
 
 from .. import editor, prompts
 from ..client import ApiClient, ApiError
+from ..formatting import parse_time, short_time
 from ..messages import t
 from ..project_files import ProjectFilesError, collect, provided_paths, required_files, single_file_path, write_tree
 from ..session import require_practice_client
@@ -39,21 +39,6 @@ def _question(client: ApiClient, slug: str) -> dict:
 
 def _files(entries: list[dict]) -> dict[str, str]:
     return {f["path"]: f["content"] for f in entries}
-
-
-def _parse_time(value: str | None) -> datetime | None:
-    if not value:
-        return None
-    try:
-        # Python 3.10's fromisoformat doesn't take a trailing "Z".
-        return datetime.fromisoformat(value.replace("Z", "+00:00"))
-    except ValueError:
-        return None
-
-
-def _when(value: str | None) -> str:
-    moment = _parse_time(value)
-    return moment.astimezone().strftime(t("drafts.time_format")) if moment else "?"
 
 
 def save(
@@ -96,14 +81,14 @@ def _starting_point(client: ApiClient, slug: str, question: dict) -> tuple[dict[
 
     version = draft["version"] if draft else 0
     if draft and submission:
-        draft_time, submission_time = _parse_time(draft["updated_at"]), _parse_time(submission["created_at"])
+        draft_time, submission_time = parse_time(draft["updated_at"]), parse_time(submission["created_at"])
         if draft_time and submission_time and submission_time > draft_time:
             draft = None
     if draft:
-        return _files(draft["files"]), version, t("drafts.from_draft", when=_when(draft["updated_at"]))
+        return _files(draft["files"]), version, t("drafts.from_draft", when=short_time(draft["updated_at"]))
     if submission:
         files = _files(submission.get("files") or []) or {required_files(question)[0]: submission.get("source_code", "")}
-        return files, version, t("drafts.from_submission", when=_when(submission["created_at"]))
+        return files, version, t("drafts.from_submission", when=short_time(submission["created_at"]))
 
     student = {f["path"]: f["content"] for f in question.get("files", []) if f.get("kind") == "student"}
     files = {path: student.get(path, "") for path in required_files(question)}

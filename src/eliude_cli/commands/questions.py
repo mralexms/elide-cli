@@ -5,7 +5,7 @@ from rich.console import Console
 
 from .. import config, display
 from ..client import ApiError
-from ..formatting import normalize_newlines
+from ..formatting import normalize_newlines, parse_time, short_time
 from ..messages import t
 from ..project_files import ProjectFilesError, extra_patterns, is_project, required_files, write_tree
 from ..session import require_practice_client
@@ -51,7 +51,19 @@ def list_questions(
         if show_timestamp:
             timestamp = q.get("last_submission_at") or "-"
             line += f"  ({t('questions.last_submitted', timestamp=timestamp)})"
+        if _unsubmitted_draft(q):
+            line += "  " + typer.style(t("questions.draft_label", when=short_time(q["draft_updated_at"])), fg=typer.colors.CYAN)
         typer.echo(line)
+
+
+def _unsubmitted_draft(question: dict) -> bool:
+    """A draft saved after the latest submission (or with none): code the
+    student saved with `eliude save`/`load` but hasn't graded yet."""
+    draft = parse_time(question.get("draft_updated_at"))
+    if draft is None:
+        return False
+    submitted = parse_time(question.get("last_submission_at"))
+    return submitted is None or draft > submitted
 
 
 def _format_caption(question: dict, classroom: str, practice: str, slug: str) -> str:

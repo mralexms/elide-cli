@@ -402,3 +402,27 @@ def test_show_caption_stays_a_clean_comment_block_when_finished(logged_in_with_c
     monkeypatch.setattr(ApiClient, "list_practices", lambda self: FINISHED_PRACTICE)
     result = runner.invoke(app, ["show", "q1", "--caption"])
     assert "read-only" not in result.output
+
+
+def test_list_flags_a_draft_that_was_not_submitted(logged_in_with_classroom, monkeypatch):
+    questions = [
+        dict(FAKE_QUESTIONS[0], slug="sem-envio", status="pending", last_submission_at=None,
+             draft_updated_at="2026-11-12T09:45:00-03:00"),
+        dict(FAKE_QUESTIONS[0], slug="rascunho-novo", status="failure",
+             last_submission_at="2026-11-12T09:00:00-03:00", draft_updated_at="2026-11-12T09:45:00-03:00"),
+        dict(FAKE_QUESTIONS[0], slug="ja-enviado", status="success",
+             last_submission_at="2026-11-12T10:00:00-03:00", draft_updated_at="2026-11-12T09:45:00-03:00"),
+        dict(FAKE_QUESTIONS[0], slug="sem-rascunho", status="pending", last_submission_at=None, draft_updated_at=None),
+    ]
+    monkeypatch.setattr(ApiClient, "list_questions", lambda self, tag=None: questions)
+    lines = {line.split()[0]: line for line in runner.invoke(app, ["questions", "list"]).output.splitlines()}
+    assert "not submitted" in lines["sem-envio"]
+    assert "not submitted" in lines["rascunho-novo"]
+    assert "not submitted" not in lines["ja-enviado"]
+    assert "not submitted" not in lines["sem-rascunho"]
+
+
+def test_list_works_with_a_server_that_does_not_send_drafts(logged_in_with_classroom, mock_questions):
+    result = runner.invoke(app, ["questions", "list"])
+    assert result.exit_code == 0
+    assert "not submitted" not in result.output
